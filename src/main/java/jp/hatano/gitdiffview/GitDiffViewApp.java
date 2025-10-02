@@ -207,15 +207,11 @@ public class GitDiffViewApp extends JFrame {
         fileListModel.clear();
         int idx1 = commitBox1.getSelectedIndex();
         int idx2 = commitBox2.getSelectedIndex();
-        if (idx1 < 0 || idx1 >= commitBox1.getItemCount() ||idx2 < 0 || idx2 >= commitBox2.getItemCount() || idx1 == idx2) return;
-        if ( idx1 > idx2 ) {
-            // 常にidx1 < idx2になるように
-            int tmp = idx1;
-            idx1 = idx2;
-            idx2 = tmp;
-        }
-        String c1 = commitIds.get(idx1);
-        String c2 = commitIds.get(idx2);
+        int offset = 1; // 0:HEAD, 1以降:commitIds
+        int maxIdx = commitIds.size() + offset - 1;
+        if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
+        String c1 = (idx1 == 0) ? commitIds.get(0) : commitIds.get(idx1 - 1);
+        String c2 = (idx2 == 0) ? commitIds.get(0) : commitIds.get(idx2 - 1);
         try {
             // commit2, commit1の順でdiff
             ProcessBuilder pb = new ProcessBuilder(
@@ -235,11 +231,13 @@ public class GitDiffViewApp extends JFrame {
     private void showDiffForSelectedFile() {
         String file = fileList.getSelectedValue();
         if (file == null) return;
-        int idx1 = commitBox1.getSelectedIndex();
-        int idx2 = commitBox2.getSelectedIndex();
-        if (idx1 < 0 || idx2 < 0 || idx1 == idx2) return;
-        String c1 = commitIds.get(idx1);
-        String c2 = commitIds.get(idx2);
+    int idx1 = commitBox1.getSelectedIndex();
+    int idx2 = commitBox2.getSelectedIndex();
+    int offset = 1;
+    int maxIdx = commitIds.size() + offset - 1;
+    if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
+    String c1 = (idx1 == 0) ? commitIds.get(0) : commitIds.get(idx1 - 1);
+    String c2 = (idx2 == 0) ? commitIds.get(0) : commitIds.get(idx2 - 1);
         try {
             // commit2, commit1の順でdiff
             ProcessBuilder pb = new ProcessBuilder(
