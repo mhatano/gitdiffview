@@ -159,14 +159,17 @@ public class GitDiffViewApp extends JFrame {
         branch = sel == null ? "" : sel.toString();
         commitBox1.removeAllItems();
         commitBox2.removeAllItems();
+        commitBox1.setEnabled(false); // 追加: 一旦disable
+        commitBox2.setEnabled(false); // 追加: 一旦disable
         commitBox1.revalidate();
         commitBox1.repaint();
         commitBox2.revalidate();
         commitBox2.repaint();
         commitIds.clear();
+        int count = 0;
         try {
             ProcessBuilder pb = new ProcessBuilder(
-            "git", "-C", repoPath, "log", branch, "--pretty=format:%H %s"
+                "git", "-C", repoPath, "log", branch, "--pretty=format:%H %s"
             );
             Process proc = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -178,10 +181,18 @@ public class GitDiffViewApp extends JFrame {
                     String label = parts[0] + (parts.length > 1 ? (" " + parts[1]) : "");
                     commitBox1.addItem(label);
                     commitBox2.addItem(label);
+                    count++;
                 }
             }
-            if (commitBox1.getItemCount() > 0) commitBox1.setSelectedIndex(0);
-            if (commitBox2.getItemCount() > 1) commitBox2.setSelectedIndex(1);
+            if (count > 0) {
+                commitBox1.setSelectedIndex(0);
+                if (commitBox2.getItemCount() > 1) commitBox2.setSelectedIndex(1);
+                commitBox1.setEnabled(true); // 要素があればenable
+                commitBox2.setEnabled(true);
+            } else {
+                commitBox1.setEnabled(false); // 念のため
+                commitBox2.setEnabled(false);
+            }
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Failed to load commits: " + ex.getMessage());
         }
@@ -191,6 +202,14 @@ public class GitDiffViewApp extends JFrame {
     private void loadBranches() {
         String path = repoBox.getEditor().getItem().toString().trim();
         branchBox.removeAllItems();
+        branchBox.setEnabled(false);
+        // --- 追加: ブランチリストを更新する際にコミットリストもクリアして無効化 ---
+        commitBox1.removeAllItems();
+        commitBox2.removeAllItems();
+        commitBox1.setEnabled(false);
+        commitBox2.setEnabled(false);
+        commitIds.clear();
+        // --- ここまで追加 ---
         if (path.isEmpty()) return;
         java.util.List<String> branches = new ArrayList<>();
         try {
@@ -211,7 +230,12 @@ public class GitDiffViewApp extends JFrame {
             branchBox.addItem(branches.get(i));
             if (branches.get(i).equals("master")) defIdx = i;
         }
-        if (branchBox.getItemCount() > 0) branchBox.setSelectedIndex(defIdx);
+        if (branchBox.getItemCount() > 0) {
+            branchBox.setSelectedIndex(defIdx);
+            branchBox.setEnabled(true);
+        } else {
+            branchBox.setEnabled(false);
+        }
     }
     
     private void loadDiffFiles() {
