@@ -1,1 +1,4 @@
 *.class
+target/surefire-reports/jp.hatano.gitdiffview.AppTest.txt
+target/surefire-reports/TEST-jp.hatano.gitdiffview.AppTest.xml
+target/gitdiffview-1.0-SNAPSHOT.jar
