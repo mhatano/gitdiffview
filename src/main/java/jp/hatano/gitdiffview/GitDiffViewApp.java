@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 
 public class GitDiffViewApp extends JFrame {
-    private JTextField repoField;
+    private JComboBox<String> repoBox;
     private JButton repoSelectButton;
     private JComboBox<String> branchBox;
     private JButton loadButton;
@@ -31,7 +31,10 @@ public class GitDiffViewApp extends JFrame {
         // 1段目: リポジトリ・ブランチ
         JPanel repoPanel = new JPanel();
         repoPanel.setLayout(new BoxLayout(repoPanel, BoxLayout.X_AXIS));
-        repoField = new JTextField(28);
+        java.util.List<String> repoHistory = RepoHistoryManager.loadHistory();
+        repoBox = new JComboBox<>(repoHistory.toArray(new String[0]));
+        repoBox.setEditable(true);
+        if (!repoHistory.isEmpty()) repoBox.setSelectedIndex(0);
         repoSelectButton = new JButton("...");
         branchBox = new JComboBox<>();
         branchBox.setPreferredSize(new Dimension(220, 26));
@@ -39,7 +42,7 @@ public class GitDiffViewApp extends JFrame {
         repoPanel.add(Box.createHorizontalStrut(8));
         repoPanel.add(new JLabel("Repo Path:"));
         repoPanel.add(Box.createHorizontalStrut(4));
-        repoPanel.add(repoField);
+        repoPanel.add(repoBox);
         repoPanel.add(repoSelectButton);
         repoPanel.add(Box.createHorizontalStrut(8));
         repoPanel.add(new JLabel("Branch:"));
@@ -56,15 +59,13 @@ public class GitDiffViewApp extends JFrame {
             int ret = chooser.showOpenDialog(this);
             if (ret == JFileChooser.APPROVE_OPTION) {
                 File dir = chooser.getSelectedFile();
-                repoField.setText(dir.getAbsolutePath());
+                repoBox.setSelectedItem(dir.getAbsolutePath());
                 loadBranches();
             }
         });
-        // テキストフィールドでパス入力時もブランチ更新
-        repoField.addActionListener(e -> loadBranches());
-        repoField.addFocusListener(new FocusAdapter() {
-            public void focusLost(FocusEvent e) { loadBranches(); }
-        });
+        // ComboBoxでパス入力時もブランチ更新
+        repoBox.addActionListener(e -> loadBranches());
+        repoBox.getEditor().addActionListener(e -> loadBranches());
         // ブランチ選択時に値をセット
         branchBox.addActionListener(e -> {
             Object sel = branchBox.getSelectedItem();
@@ -153,7 +154,7 @@ public class GitDiffViewApp extends JFrame {
     }
     
     private void loadCommits() {
-        repoPath = repoField.getText().trim();
+        repoPath = repoBox.getEditor().getItem().toString().trim();
         Object sel = branchBox.getSelectedItem();
         branch = sel == null ? "" : sel.toString();
         commitBox1.removeAllItems();
@@ -188,7 +189,7 @@ public class GitDiffViewApp extends JFrame {
     
     // リポジトリのローカルブランチ一覧を取得し、branchBoxにセット
     private void loadBranches() {
-        String path = repoField.getText().trim();
+        String path = repoBox.getEditor().getItem().toString().trim();
         branchBox.removeAllItems();
         if (path.isEmpty()) return;
         java.util.List<String> branches = new ArrayList<>();
@@ -266,6 +267,24 @@ public class GitDiffViewApp extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             GitDiffViewApp app = new GitDiffViewApp();
+            // 前回選択リポジトリをセット
+            java.util.List<String> history = RepoHistoryManager.loadHistory();
+            if (!history.isEmpty()) {
+                app.repoBox.setSelectedItem(history.get(0));
+                app.loadBranches();
+            }
+            app.addWindowListener(new java.awt.event.WindowAdapter() {
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    // 履歴保存
+                    java.util.List<String> hist = new java.util.ArrayList<>();
+                    for (int i = 0; i < app.repoBox.getItemCount(); i++) {
+                        String s = app.repoBox.getItemAt(i);
+                        if (RepoHistoryManager.isGitRepo(s)) hist.add(s);
+                    }
+                    String selected = app.repoBox.getEditor().getItem().toString();
+                    RepoHistoryManager.saveHistory(hist, selected);
+                }
+            });
             app.setVisible(true);
         });
     }
