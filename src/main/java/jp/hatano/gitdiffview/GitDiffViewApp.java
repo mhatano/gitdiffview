@@ -243,6 +243,9 @@ public class GitDiffViewApp extends JFrame {
         int idx2 = commitBox2.getSelectedIndex();
         int maxIdx = commitIds.size() - 1;
         if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
+        // --- 追加: ファイルリストの重複防止のため毎回クリア ---
+        fileListModel.clear();
+        // --- ここまで追加 ---
         String c1 = commitIds.get(idx1);
         String c2 = commitIds.get(idx2);
         try {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="jp.hatano.gitdiffview.AppTest" time="0.479" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" name="jp.hatano.gitdiffview.AppTest" time="0.14" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -12,7 +12,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="JP"/>
     <property name="sun.boot.library.path" value="/home/hatano/.sdkman/candidates/java/21.0.6-amzn/lib"/>
-    <property name="sun.java.command" value="/home/hatano/VSCProj/gitdiffview/target/surefire/surefirebooter12334028655702439305.jar /home/hatano/VSCProj/gitdiffview/target/surefire 2025-10-03T23-35-16_049-jvmRun1 surefire17794685776917471950tmp surefire_018337938642957395960tmp"/>
+    <property name="sun.java.command" value="/home/hatano/VSCProj/gitdiffview/target/surefire/surefirebooter12152423532946989079.jar /home/hatano/VSCProj/gitdiffview/target/surefire 2025-10-04T00-01-54_250-jvmRun1 surefire15659175958863344647tmp surefire_01601808806783804835tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/home/hatano/VSCProj/gitdiffview/target/test-classes:/home/hatano/VSCProj/gitdiffview/target/classes:/home/hatano/.m2/repository/junit/junit/4.11/junit-4.11.jar:/home/hatano/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -27,7 +27,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
-    <property name="surefire.real.class.path" value="/home/hatano/VSCProj/gitdiffview/target/surefire/surefirebooter12334028655702439305.jar"/>
+    <property name="surefire.real.class.path" value="/home/hatano/VSCProj/gitdiffview/target/surefire/surefirebooter12152423532946989079.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.6+7-LTS"/>
     <property name="user.name" value="hatano"/>
@@ -54,5 +54,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="shouldAnswerWithTrue" classname="jp.hatano.gitdiffview.AppTest" time="0.047"/>
+  <testcase name="shouldAnswerWithTrue" classname="jp.hatano.gitdiffview.AppTest" time="0.007"/>
 </testsuite>
