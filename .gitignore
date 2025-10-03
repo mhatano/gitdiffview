@@ -1,15 +1,1 @@
-target/classes/jp/hatano/gitdiffview/App.class
-target/classes/jp/hatano/gitdiffview/DiffColorTextArea.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$1.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$2.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$3.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$4.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$5.class
-target/test-classes/jp/hatano/gitdiffview/AppTest.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$3.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$2.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp$1.class
-target/classes/jp/hatano/gitdiffview/GitDiffViewApp.class
-target/classes/jp/hatano/gitdiffview/DiffColorTextArea.class
-target/classes/jp/hatano/gitdiffview/App.class
+*.class
