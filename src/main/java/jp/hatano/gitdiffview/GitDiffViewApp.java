@@ -20,113 +20,125 @@ public class GitDiffViewApp extends JFrame {
     private java.util.List<String> commitIds = new ArrayList<>();
     private String repoPath = "";
     private String branch = "";
-
+    
     public GitDiffViewApp() {
         setTitle("Git Diff Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-
-    // 1段目: リポジトリ・ブランチ
-    JPanel repoPanel = new JPanel();
-    repoPanel.setLayout(new BoxLayout(repoPanel, BoxLayout.X_AXIS));
-    repoField = new JTextField(30);
-    repoSelectButton = new JButton("...");
-    branchBox = new JComboBox<>();
-    branchBox.setPreferredSize(new Dimension(120, 26));
-    loadButton = new JButton("Load Commits");
-    repoPanel.add(Box.createHorizontalStrut(8));
-    repoPanel.add(new JLabel("Repo Path:"));
-    repoPanel.add(Box.createHorizontalStrut(4));
-    repoPanel.add(repoField);
-    repoPanel.add(repoSelectButton);
-    repoPanel.add(Box.createHorizontalStrut(8));
-    repoPanel.add(new JLabel("Branch:"));
-    repoPanel.add(Box.createHorizontalStrut(4));
-    repoPanel.add(branchBox);
-    repoPanel.add(Box.createHorizontalStrut(8));
-    repoPanel.add(loadButton);
-    repoPanel.add(Box.createHorizontalGlue());
-
-    // リポジトリ選択ダイアログ
-    repoSelectButton.addActionListener(e -> {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int ret = chooser.showOpenDialog(this);
-        if (ret == JFileChooser.APPROVE_OPTION) {
-            File dir = chooser.getSelectedFile();
-            repoField.setText(dir.getAbsolutePath());
-            loadBranches();
-        }
-    });
-    // テキストフィールドでパス入力時もブランチ更新
-    repoField.addActionListener(e -> loadBranches());
-    repoField.addFocusListener(new FocusAdapter() {
-        public void focusLost(FocusEvent e) { loadBranches(); }
-    });
-    // ブランチ選択時に値をセット
-    branchBox.addActionListener(e -> {
-        Object sel = branchBox.getSelectedItem();
-        branch = sel == null ? "" : sel.toString();
-    });
-
-    // 2段目: コミット選択
-    JPanel commitPanel = new JPanel();
-    commitPanel.setLayout(new BoxLayout(commitPanel, BoxLayout.X_AXIS));
-    commitBox1 = new JComboBox<>();
-    commitBox2 = new JComboBox<>();
-    Dimension comboSize = new Dimension(220, 26);
-    commitBox1.setMaximumSize(comboSize);
-    commitBox2.setMaximumSize(comboSize);
-    commitBox1.setPreferredSize(comboSize);
-    commitBox2.setPreferredSize(comboSize);
-    commitBox1.setRenderer(new DefaultListCellRenderer() {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            String str = value == null ? "" : value.toString();
-            if (str.length() > 30) str = str.substring(0, 28) + "...";
-            return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
-        }
-    });
-    commitBox2.setRenderer(new DefaultListCellRenderer() {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-            String str = value == null ? "" : value.toString();
-            if (str.length() > 30) str = str.substring(0, 28) + "...";
-            return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
-        }
-    });
-    showFilesButton = new JButton("Show Diff Files");
-    commitPanel.add(Box.createHorizontalStrut(8));
-    commitPanel.add(new JLabel("Commit 1:"));
-    commitPanel.add(Box.createHorizontalStrut(4));
-    commitPanel.add(commitBox1);
-    commitPanel.add(Box.createHorizontalStrut(8));
-    commitPanel.add(new JLabel("Commit 2:"));
-    commitPanel.add(Box.createHorizontalStrut(4));
-    commitPanel.add(commitBox2);
-    commitPanel.add(Box.createHorizontalStrut(8));
-    commitPanel.add(showFilesButton);
-    commitPanel.add(Box.createHorizontalGlue());
-
-    // 2段をまとめるパネル
-    JPanel topPanel = new JPanel();
-    topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
-    topPanel.add(repoPanel);
-    topPanel.add(commitPanel);
-    add(topPanel, BorderLayout.NORTH);
-
+        
+        // 1段目: リポジトリ・ブランチ
+        JPanel repoPanel = new JPanel();
+        repoPanel.setLayout(new BoxLayout(repoPanel, BoxLayout.X_AXIS));
+        repoField = new JTextField(28);
+        repoSelectButton = new JButton("...");
+        branchBox = new JComboBox<>();
+        branchBox.setPreferredSize(new Dimension(220, 26));
+        loadButton = new JButton("Load Commits");
+        repoPanel.add(Box.createHorizontalStrut(8));
+        repoPanel.add(new JLabel("Repo Path:"));
+        repoPanel.add(Box.createHorizontalStrut(4));
+        repoPanel.add(repoField);
+        repoPanel.add(repoSelectButton);
+        repoPanel.add(Box.createHorizontalStrut(8));
+        repoPanel.add(new JLabel("Branch:"));
+        repoPanel.add(Box.createHorizontalStrut(4));
+        repoPanel.add(branchBox);
+        repoPanel.add(Box.createHorizontalStrut(8));
+        repoPanel.add(loadButton);
+        repoPanel.add(Box.createHorizontalGlue());
+        
+        // リポジトリ選択ダイアログ
+        repoSelectButton.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int ret = chooser.showOpenDialog(this);
+            if (ret == JFileChooser.APPROVE_OPTION) {
+                File dir = chooser.getSelectedFile();
+                repoField.setText(dir.getAbsolutePath());
+                loadBranches();
+            }
+        });
+        // テキストフィールドでパス入力時もブランチ更新
+        repoField.addActionListener(e -> loadBranches());
+        repoField.addFocusListener(new FocusAdapter() {
+            public void focusLost(FocusEvent e) { loadBranches(); }
+        });
+        // ブランチ選択時に値をセット
+        branchBox.addActionListener(e -> {
+            Object sel = branchBox.getSelectedItem();
+            branch = sel == null ? "" : sel.toString();
+        });
+        
+        // 2段目: コミット選択
+        JPanel commitPanel = new JPanel();
+        commitPanel.setLayout(new BoxLayout(commitPanel, BoxLayout.X_AXIS));
+        commitBox1 = new JComboBox<>();
+        commitBox2 = new JComboBox<>();
+        Dimension comboSize = new Dimension(220, 26);
+        commitBox1.setMaximumSize(comboSize);
+        commitBox2.setMaximumSize(comboSize);
+        commitBox1.setPreferredSize(comboSize);
+        commitBox2.setPreferredSize(comboSize);
+        commitBox1.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                String str = value == null ? "" : value.toString();
+                if (str.length() > 30) str = str.substring(0, 28) + "...";
+                return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
+            }
+        });
+        commitBox1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fileListModel.clear();
+            }
+        });
+        commitBox2.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                String str = value == null ? "" : value.toString();
+                if (str.length() > 30) str = str.substring(0, 28) + "...";
+                return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
+            }
+        });
+        commitBox2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fileListModel.clear();
+            }
+        });
+        showFilesButton = new JButton("Show Diff Files");
+        commitPanel.add(Box.createHorizontalStrut(8));
+        commitPanel.add(new JLabel("Commit 1:"));
+        commitPanel.add(Box.createHorizontalStrut(4));
+        commitPanel.add(commitBox1);
+        commitPanel.add(Box.createHorizontalStrut(8));
+        commitPanel.add(new JLabel("Commit 2:"));
+        commitPanel.add(Box.createHorizontalStrut(4));
+        commitPanel.add(commitBox2);
+        commitPanel.add(Box.createHorizontalStrut(8));
+        commitPanel.add(showFilesButton);
+        commitPanel.add(Box.createHorizontalGlue());
+        
+        // 2段をまとめるパネル
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        topPanel.add(repoPanel);
+        topPanel.add(commitPanel);
+        add(topPanel, BorderLayout.NORTH);
+        
         fileListModel = new DefaultListModel<>();
         fileList = new JList<>(fileListModel);
         JScrollPane fileScroll = new JScrollPane(fileList);
         fileScroll.setPreferredSize(new Dimension(250, 0));
         add(fileScroll, BorderLayout.WEST);
-
+        
         diffArea = new DiffColorTextArea();
         JScrollPane diffScroll = new JScrollPane(diffArea);
         add(diffScroll, BorderLayout.CENTER);
-
+        
         loadButton.addActionListener(e -> loadCommits());
         showFilesButton.addActionListener(e -> loadDiffFiles());
         fileList.addListSelectionListener(e -> {
@@ -139,7 +151,7 @@ public class GitDiffViewApp extends JFrame {
         commitBox1.addActionListener(clearDiffListener);
         commitBox2.addActionListener(clearDiffListener);
     }
-
+    
     private void loadCommits() {
         repoPath = repoField.getText().trim();
         Object sel = branchBox.getSelectedItem();
@@ -153,13 +165,11 @@ public class GitDiffViewApp extends JFrame {
         commitIds.clear();
         try {
             ProcessBuilder pb = new ProcessBuilder(
-                "git", "-C", repoPath, "log", branch, "--pretty=format:%H %s"
+            "git", "-C", repoPath, "log", branch, "--pretty=format:%H %s"
             );
             Process proc = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
             String line;
-            commitBox1.addItem("HEAD");
-            commitBox2.addItem("HEAD");
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(" ", 2);
                 if (parts.length > 0) {
@@ -175,7 +185,7 @@ public class GitDiffViewApp extends JFrame {
             JOptionPane.showMessageDialog(this, "Failed to load commits: " + ex.getMessage());
         }
     }
-
+    
     // リポジトリのローカルブランチ一覧を取得し、branchBoxにセット
     private void loadBranches() {
         String path = repoField.getText().trim();
@@ -202,20 +212,18 @@ public class GitDiffViewApp extends JFrame {
         }
         if (branchBox.getItemCount() > 0) branchBox.setSelectedIndex(defIdx);
     }
-
+    
     private void loadDiffFiles() {
-        fileListModel.clear();
         int idx1 = commitBox1.getSelectedIndex();
         int idx2 = commitBox2.getSelectedIndex();
-        int offset = 1; // 0:HEAD, 1以降:commitIds
-        int maxIdx = commitIds.size() + offset - 1;
+        int maxIdx = commitIds.size() - 1;
         if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
-        String c1 = (idx1 == 0) ? commitIds.get(0) : commitIds.get(idx1 - 1);
-        String c2 = (idx2 == 0) ? commitIds.get(0) : commitIds.get(idx2 - 1);
+        String c1 = commitIds.get(idx1);
+        String c2 = commitIds.get(idx2);
         try {
             // commit2, commit1の順でdiff
             ProcessBuilder pb = new ProcessBuilder(
-                "git", "-C", repoPath, "diff", "--name-only", c2, c1
+            "git", "-C", repoPath, "diff", "--name-only", c2, c1
             );
             Process proc = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -227,21 +235,20 @@ public class GitDiffViewApp extends JFrame {
             JOptionPane.showMessageDialog(this, "Failed to load diff files: " + ex.getMessage());
         }
     }
-
+    
     private void showDiffForSelectedFile() {
         String file = fileList.getSelectedValue();
         if (file == null) return;
-    int idx1 = commitBox1.getSelectedIndex();
-    int idx2 = commitBox2.getSelectedIndex();
-    int offset = 1;
-    int maxIdx = commitIds.size() + offset - 1;
-    if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
-    String c1 = (idx1 == 0) ? commitIds.get(0) : commitIds.get(idx1 - 1);
-    String c2 = (idx2 == 0) ? commitIds.get(0) : commitIds.get(idx2 - 1);
+        int idx1 = commitBox1.getSelectedIndex();
+        int idx2 = commitBox2.getSelectedIndex();
+        int maxIdx = commitIds.size() - 1;
+        if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
+        String c1 = commitIds.get(idx1);
+        String c2 = commitIds.get(idx2);
         try {
             // commit2, commit1の順でdiff
             ProcessBuilder pb = new ProcessBuilder(
-                "git", "-C", repoPath, "diff", c2, c1, "--", file
+            "git", "-C", repoPath, "diff", c2, c1, "--", file
             );
             Process proc = pb.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
@@ -255,7 +262,7 @@ public class GitDiffViewApp extends JFrame {
             diffArea.setText("Failed to load diff: " + ex.getMessage());
         }
     }
-
+    
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             GitDiffViewApp app = new GitDiffViewApp();

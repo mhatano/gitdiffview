@@ -9,7 +9,7 @@ public class DiffColorTextArea extends JTextPane {
         setEditable(false);
         setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
     }
-
+    
     public void setDiffText(String diff) {
         setText("");
         StyledDocument doc = getStyledDocument();
