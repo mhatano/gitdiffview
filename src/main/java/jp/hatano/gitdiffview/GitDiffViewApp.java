@@ -90,12 +90,7 @@ public class GitDiffViewApp extends JFrame {
                 return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
             }
         });
-        commitBox1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                fileListModel.clear();
-            }
-        });
+        commitBox1.addActionListener(e -> fileListModel.clear());
         commitBox2.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -104,12 +99,7 @@ public class GitDiffViewApp extends JFrame {
                 return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
             }
         });
-        commitBox2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                fileListModel.clear();
-            }
-        });
+        commitBox2.addActionListener(e -> fileListModel.clear());
         showFilesButton = new JButton("Show Diff Files");
         commitPanel.add(Box.createHorizontalStrut(8));
         commitPanel.add(new JLabel("Commit 1:"));
