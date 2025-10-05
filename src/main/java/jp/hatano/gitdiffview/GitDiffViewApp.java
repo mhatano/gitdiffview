@@ -64,7 +64,23 @@ public class GitDiffViewApp extends JFrame {
             }
         });
         // ComboBoxでパス入力時もブランチ更新
-        repoBox.addActionListener(e -> loadBranches());
+        repoBox.addActionListener(e -> {
+            String prev = repoPath;
+            String current = repoBox.getEditor().getItem().toString().trim();
+            if (prev != null && !prev.isEmpty() && !prev.equals(current) && RepoHistoryManager.isGitRepo(prev)) {
+                java.util.List<String> hist = new java.util.ArrayList<>();
+                for (int i = 0; i < repoBox.getItemCount(); i++) {
+                    String s = repoBox.getItemAt(i);
+                    if (RepoHistoryManager.isGitRepo(s)) hist.add(s);
+                }
+                RepoHistoryManager.saveHistory(hist, prev);
+                // --- 追加: ドロップダウンも即時更新 ---
+                if (((DefaultComboBoxModel<String>)repoBox.getModel()).getIndexOf(prev) < 0) {
+                    repoBox.addItem(prev);
+                }
+            }
+            loadBranches();
+        });
         repoBox.getEditor().addActionListener(e -> loadBranches());
         // ブランチ選択時に値をセット
         branchBox.addActionListener(e -> {
