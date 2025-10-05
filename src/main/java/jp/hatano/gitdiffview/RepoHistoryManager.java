@@ -7,6 +7,7 @@ public class RepoHistoryManager {
     private static final String HISTORY_FILE = System.getProperty("user.home") + "/.gitdiffview_repo_history";
     private static final int MAX_HISTORY = 10;
     
+    // Load repository history from file
     public static List<String> loadHistory() {
         List<String> list = new ArrayList<>();
         File file = new File(HISTORY_FILE);
@@ -24,6 +25,7 @@ public class RepoHistoryManager {
         return list;
     }
     
+    // Save repository history to file
     public static void saveHistory(List<String> history, String selected) {
         LinkedHashSet<String> set = new LinkedHashSet<>();
         if (selected != null && !selected.isEmpty() && isGitRepo(selected)) set.add(selected);
@@ -41,6 +43,7 @@ public class RepoHistoryManager {
         }
     }
     
+    // Check if the given path is a git repository
     public static boolean isGitRepo(String path) {
         if (path == null || path.isEmpty()) return false;
         File gitDir = new File(path, ".git");

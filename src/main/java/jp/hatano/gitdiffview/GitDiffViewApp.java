@@ -28,7 +28,7 @@ public class GitDiffViewApp extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         
-        // 1段目: リポジトリ・ブランチ
+        // Row 1: Repository & Branch
         JPanel repoPanel = new JPanel();
         repoPanel.setLayout(new BoxLayout(repoPanel, BoxLayout.X_AXIS));
         java.util.List<String> repoHistory = RepoHistoryManager.loadHistory();
@@ -52,7 +52,7 @@ public class GitDiffViewApp extends JFrame {
         repoPanel.add(loadButton);
         repoPanel.add(Box.createHorizontalGlue());
         
-        // リポジトリ選択ダイアログ
+        // Repository select dialog
         repoSelectButton.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -63,7 +63,7 @@ public class GitDiffViewApp extends JFrame {
                 loadBranches();
             }
         });
-        // ComboBoxでパス入力時もブランチ更新
+        // Update branches when path is entered in ComboBox
         repoBox.addActionListener(e -> {
             String prev = repoPath;
             String current = repoBox.getEditor().getItem().toString().trim();
@@ -74,7 +74,7 @@ public class GitDiffViewApp extends JFrame {
                     if (RepoHistoryManager.isGitRepo(s)) hist.add(s);
                 }
                 RepoHistoryManager.saveHistory(hist, prev);
-                // --- 追加: ドロップダウンも即時更新 ---
+                // --- Add: update dropdown immediately ---
                 if (((DefaultComboBoxModel<String>)repoBox.getModel()).getIndexOf(prev) < 0) {
                     repoBox.addItem(prev);
                 }
@@ -82,13 +82,13 @@ public class GitDiffViewApp extends JFrame {
             loadBranches();
         });
         repoBox.getEditor().addActionListener(e -> loadBranches());
-        // ブランチ選択時に値をセット
+        // Set value when branch is selected
         branchBox.addActionListener(e -> {
             Object sel = branchBox.getSelectedItem();
             branch = sel == null ? "" : sel.toString();
         });
         
-        // 2段目: コミット選択
+        // Row 2: Commit selection
         JPanel commitPanel = new JPanel();
         commitPanel.setLayout(new BoxLayout(commitPanel, BoxLayout.X_AXIS));
         commitBox1 = new JComboBox<>();
@@ -129,7 +129,7 @@ public class GitDiffViewApp extends JFrame {
         commitPanel.add(showFilesButton);
         commitPanel.add(Box.createHorizontalGlue());
         
-        // 2段をまとめるパネル
+        // Panel for both rows
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         topPanel.add(repoPanel);
@@ -153,7 +153,7 @@ public class GitDiffViewApp extends JFrame {
                 showDiffForSelectedFile();
             }
         });
-        // コミット選択時にdiffエリアをクリア
+        // Clear diff area when commit is selected
         ActionListener clearDiffListener = e -> diffArea.setText("");
         commitBox1.addActionListener(clearDiffListener);
         commitBox2.addActionListener(clearDiffListener);
@@ -165,8 +165,8 @@ public class GitDiffViewApp extends JFrame {
         branch = sel == null ? "" : sel.toString();
         commitBox1.removeAllItems();
         commitBox2.removeAllItems();
-        commitBox1.setEnabled(false); // 追加: 一旦disable
-        commitBox2.setEnabled(false); // 追加: 一旦disable
+        commitBox1.setEnabled(false); // Temporarily disable
+        commitBox2.setEnabled(false); // Temporarily disable
         commitBox1.revalidate();
         commitBox1.repaint();
         commitBox2.revalidate();
@@ -193,10 +193,10 @@ public class GitDiffViewApp extends JFrame {
             if (count > 0) {
                 commitBox1.setSelectedIndex(0);
                 if (commitBox2.getItemCount() > 1) commitBox2.setSelectedIndex(1);
-                commitBox1.setEnabled(true); // 要素があればenable
+                commitBox1.setEnabled(true); // Enable if items exist
                 commitBox2.setEnabled(true);
             } else {
-                commitBox1.setEnabled(false); // 念のため
+                commitBox1.setEnabled(false); // Just in case
                 commitBox2.setEnabled(false);
             }
         } catch (IOException ex) {
@@ -204,18 +204,17 @@ public class GitDiffViewApp extends JFrame {
         }
     }
     
-    // リポジトリのローカルブランチ一覧を取得し、branchBoxにセット
+    // Get local branch list of repository and set to branchBox
     private void loadBranches() {
         String path = repoBox.getEditor().getItem().toString().trim();
         branchBox.removeAllItems();
         branchBox.setEnabled(false);
-        // --- 追加: ブランチリストを更新する際にコミットリストもクリアして無効化 ---
+        // Clear and disable commit list when updating branch list
         commitBox1.removeAllItems();
         commitBox2.removeAllItems();
         commitBox1.setEnabled(false);
         commitBox2.setEnabled(false);
         commitIds.clear();
-        // --- ここまで追加 ---
         if (path.isEmpty()) return;
         java.util.List<String> branches = new ArrayList<>();
         try {
@@ -230,7 +229,7 @@ public class GitDiffViewApp extends JFrame {
         } catch (IOException ex) {
             // ignore
         }
-        // デフォルトはmaster優先、なければ最初
+        // Default is master if exists, otherwise first
         int defIdx = 0;
         for (int i = 0; i < branches.size(); i++) {
             branchBox.addItem(branches.get(i));
@@ -249,13 +248,12 @@ public class GitDiffViewApp extends JFrame {
         int idx2 = commitBox2.getSelectedIndex();
         int maxIdx = commitIds.size() - 1;
         if (idx1 < 0 || idx2 < 0 || idx1 > maxIdx || idx2 > maxIdx || idx1 == idx2) return;
-        // --- 追加: ファイルリストの重複防止のため毎回クリア ---
+        // Clear file list every time to prevent duplicates
         fileListModel.clear();
-        // --- ここまで追加 ---
         String c1 = commitIds.get(idx1);
         String c2 = commitIds.get(idx2);
         try {
-            // commit2, commit1の順でdiff
+            // diff in order: commit2, commit1
             ProcessBuilder pb = new ProcessBuilder(
             "git", "-C", repoPath, "diff", "--name-only", c2, c1
             );
@@ -280,7 +278,7 @@ public class GitDiffViewApp extends JFrame {
         String c1 = commitIds.get(idx1);
         String c2 = commitIds.get(idx2);
         try {
-            // commit2, commit1の順でdiff
+            // diff in order: commit2, commit1
             ProcessBuilder pb = new ProcessBuilder(
             "git", "-C", repoPath, "diff", c2, c1, "--", file
             );
@@ -300,7 +298,7 @@ public class GitDiffViewApp extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             GitDiffViewApp app = new GitDiffViewApp();
-            // 前回選択リポジトリをセット
+            // Set last selected repository
             java.util.List<String> history = RepoHistoryManager.loadHistory();
             if (!history.isEmpty()) {
                 app.repoBox.setSelectedItem(history.get(0));
@@ -308,7 +306,7 @@ public class GitDiffViewApp extends JFrame {
             }
             app.addWindowListener(new java.awt.event.WindowAdapter() {
                 public void windowClosing(java.awt.event.WindowEvent e) {
-                    // 履歴保存
+                    // Save history
                     java.util.List<String> hist = new java.util.ArrayList<>();
                     for (int i = 0; i < app.repoBox.getItemCount(); i++) {
                         String s = app.repoBox.getItemAt(i);
