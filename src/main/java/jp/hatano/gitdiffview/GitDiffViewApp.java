@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.prefs.Preferences;
 
 public class GitDiffViewApp extends JFrame {
     private JComboBox<String> repoBox;
@@ -24,11 +25,25 @@ public class GitDiffViewApp extends JFrame {
     private String branch = "";
     private String currentEncoding = "UTF-8"; // Default encoding
 
+    // Preferences keys for window position/size and encoding history
+    private static final String PREF_KEY_WIN_X = "windowX";
+    private static final String PREF_KEY_WIN_Y = "windowY";
+    private static final String PREF_KEY_WIN_W = "windowW";
+    private static final String PREF_KEY_WIN_H = "windowH";
+    private static final String PREF_KEY_ENCODING_HISTORY = "encodingHistory";
+    private Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
+
     public GitDiffViewApp() {
         setTitle("Git Diff Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 700);
-        setLocationRelativeTo(null);
+
+        // Restore window position and size
+        int x = prefs.getInt(PREF_KEY_WIN_X, 100);
+        int y = prefs.getInt(PREF_KEY_WIN_Y, 100);
+        int w = prefs.getInt(PREF_KEY_WIN_W, 1000);
+        int h = prefs.getInt(PREF_KEY_WIN_H, 700);
+        setBounds(x, y, w, h);
+
         setLayout(new BorderLayout());
 
         // 1st row: Repository & Branch
@@ -86,8 +101,31 @@ public class GitDiffViewApp extends JFrame {
         commitBox2.addActionListener(e -> fileListModel.clear());
         showFilesButton = new JButton("Show Diff Files");
 
-        // Encoding selection dropdown (editable)
+        // Encoding selection dropdown (editable, with history)
         java.util.List<String> encodings = new ArrayList<>(Arrays.asList("UTF-8", "Shift_JIS", "EUC-JP", "ISO-8859-1", "US-ASCII"));
+        // Load encoding history from preferences
+        String encodingHistoryStr = prefs.get(PREF_KEY_ENCODING_HISTORY, "");
+        if (!encodingHistoryStr.isEmpty()) {
+            String[] hist = encodingHistoryStr.split("\n");
+            for (int i = hist.length - 1; i >= 0; i--) {
+                String enc = hist[i];
+                if (!enc.isEmpty() && !encodings.contains(enc)) {
+                    encodings.add(enc);
+                }
+            }
+        }
+        // Move last used encoding to the top
+        String lastEncoding = encodings.get(0);
+        if (!encodingHistoryStr.isEmpty()) {
+            String[] hist = encodingHistoryStr.split("\n");
+            if (hist.length > 0 && !hist[0].isEmpty()) {
+                lastEncoding = hist[0];
+            }
+        }
+        encodings.remove(lastEncoding);
+        encodings.add(0, lastEncoding);
+        currentEncoding = lastEncoding;
+
         encodingBox = new JComboBox<>(encodings.toArray(new String[0]));
         encodingBox.setEditable(true);
         encodingBox.setSelectedItem(currentEncoding);
@@ -98,12 +136,13 @@ public class GitDiffViewApp extends JFrame {
             if (selected == null || selected.isEmpty()) return;
             if (!selected.equals(currentEncoding)) {
                 if (Charset.isSupported(selected)) {
-                    // Move selected encoding to top
+                    // Move selected encoding to top and save to history
                     DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) encodingBox.getModel();
                     model.removeElement(selected);
                     model.insertElementAt(selected, 0);
                     encodingBox.setSelectedIndex(0);
                     currentEncoding = selected;
+                    saveEncodingHistory();
                     showDiffForSelectedFile();
                 } else {
                     // Show error dialog for unknown encoding
@@ -158,8 +197,30 @@ public class GitDiffViewApp extends JFrame {
         ActionListener clearDiffListener = e -> diffArea.setText("");
         commitBox1.addActionListener(clearDiffListener);
         commitBox2.addActionListener(clearDiffListener);
+
+        // Save window position, size, and encoding history on close
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                prefs.putInt(PREF_KEY_WIN_X, getX());
+                prefs.putInt(PREF_KEY_WIN_Y, getY());
+                prefs.putInt(PREF_KEY_WIN_W, getWidth());
+                prefs.putInt(PREF_KEY_WIN_H, getHeight());
+                saveEncodingHistory();
+            }
+        });
     }
-    
+
+    // Save encoding history to preferences (top 10, last used at top)
+    private void saveEncodingHistory() {
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) encodingBox.getModel();
+        StringBuilder sb = new StringBuilder();
+        int max = Math.min(10, model.getSize());
+        for (int i = 0; i < max; i++) {
+            sb.append(model.getElementAt(i)).append("\n");
+        }
+        prefs.put(PREF_KEY_ENCODING_HISTORY, sb.toString());
+    }
+
     private void loadCommits() {
         repoPath = repoBox.getEditor().getItem().toString().trim();
         Object sel = branchBox.getSelectedItem();
@@ -204,7 +265,7 @@ public class GitDiffViewApp extends JFrame {
             JOptionPane.showMessageDialog(this, "Failed to load commits: " + ex.getMessage());
         }
     }
-    
+
     // Get local branch list of repository and set to branchBox
     private void loadBranches() {
         String path = repoBox.getEditor().getItem().toString().trim();
@@ -243,7 +304,7 @@ public class GitDiffViewApp extends JFrame {
             branchBox.setEnabled(false);
         }
     }
-    
+
     private void loadDiffFiles() {
         int idx1 = commitBox1.getSelectedIndex();
         int idx2 = commitBox2.getSelectedIndex();
@@ -268,7 +329,7 @@ public class GitDiffViewApp extends JFrame {
             JOptionPane.showMessageDialog(this, "Failed to load diff files: " + ex.getMessage());
         }
     }
-    
+
     private void showDiffForSelectedFile() {
         String file = fileList.getSelectedValue();
         if (file == null) return;
@@ -297,7 +358,7 @@ public class GitDiffViewApp extends JFrame {
             diffArea.setText("Failed to load diff: " + ex.getMessage());
         }
     }
-    
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             GitDiffViewApp app = new GitDiffViewApp();
@@ -307,18 +368,6 @@ public class GitDiffViewApp extends JFrame {
                 app.repoBox.setSelectedItem(history.get(0));
                 app.loadBranches();
             }
-            app.addWindowListener(new java.awt.event.WindowAdapter() {
-                public void windowClosing(java.awt.event.WindowEvent e) {
-                    // Save history
-                    java.util.List<String> hist = new java.util.ArrayList<>();
-                    for (int i = 0; i < app.repoBox.getItemCount(); i++) {
-                        String s = app.repoBox.getItemAt(i);
-                        if (RepoHistoryManager.isGitRepo(s)) hist.add(s);
-                    }
-                    String selected = app.repoBox.getEditor().getItem().toString();
-                    RepoHistoryManager.saveHistory(hist, selected);
-                }
-            });
             app.setVisible(true);
         });
     }
