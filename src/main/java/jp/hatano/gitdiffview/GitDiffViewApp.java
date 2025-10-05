@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public class GitDiffViewApp extends JFrame {
@@ -17,18 +18,20 @@ public class GitDiffViewApp extends JFrame {
     private JList<String> fileList;
     private DefaultListModel<String> fileListModel;
     private DiffColorTextArea diffArea;
+    private JComboBox<String> encodingBox; // Encoding selection
     private java.util.List<String> commitIds = new ArrayList<>();
     private String repoPath = "";
     private String branch = "";
-    
+    private String currentEncoding = "UTF-8"; // Default encoding
+
     public GitDiffViewApp() {
         setTitle("Git Diff Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        
-        // Row 1: Repository & Branch
+
+        // 1st row: Repository & Branch
         JPanel repoPanel = new JPanel();
         repoPanel.setLayout(new BoxLayout(repoPanel, BoxLayout.X_AXIS));
         java.util.List<String> repoHistory = RepoHistoryManager.loadHistory();
@@ -39,6 +42,7 @@ public class GitDiffViewApp extends JFrame {
         branchBox = new JComboBox<>();
         branchBox.setPreferredSize(new Dimension(220, 26));
         loadButton = new JButton("Load Commits");
+
         repoPanel.add(Box.createHorizontalStrut(8));
         repoPanel.add(new JLabel("Repo Path:"));
         repoPanel.add(Box.createHorizontalStrut(4));
@@ -51,44 +55,8 @@ public class GitDiffViewApp extends JFrame {
         repoPanel.add(Box.createHorizontalStrut(8));
         repoPanel.add(loadButton);
         repoPanel.add(Box.createHorizontalGlue());
-        
-        // Repository select dialog
-        repoSelectButton.addActionListener(e -> {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int ret = chooser.showOpenDialog(this);
-            if (ret == JFileChooser.APPROVE_OPTION) {
-                File dir = chooser.getSelectedFile();
-                repoBox.setSelectedItem(dir.getAbsolutePath());
-                loadBranches();
-            }
-        });
-        // Update branches when path is entered in ComboBox
-        repoBox.addActionListener(e -> {
-            String prev = repoPath;
-            String current = repoBox.getEditor().getItem().toString().trim();
-            if (prev != null && !prev.isEmpty() && !prev.equals(current) && RepoHistoryManager.isGitRepo(prev)) {
-                java.util.List<String> hist = new java.util.ArrayList<>();
-                for (int i = 0; i < repoBox.getItemCount(); i++) {
-                    String s = repoBox.getItemAt(i);
-                    if (RepoHistoryManager.isGitRepo(s)) hist.add(s);
-                }
-                RepoHistoryManager.saveHistory(hist, prev);
-                // --- Add: update dropdown immediately ---
-                if (((DefaultComboBoxModel<String>)repoBox.getModel()).getIndexOf(prev) < 0) {
-                    repoBox.addItem(prev);
-                }
-            }
-            loadBranches();
-        });
-        repoBox.getEditor().addActionListener(e -> loadBranches());
-        // Set value when branch is selected
-        branchBox.addActionListener(e -> {
-            Object sel = branchBox.getSelectedItem();
-            branch = sel == null ? "" : sel.toString();
-        });
-        
-        // Row 2: Commit selection
+
+        // 2nd row: Commit selection + Encoding
         JPanel commitPanel = new JPanel();
         commitPanel.setLayout(new BoxLayout(commitPanel, BoxLayout.X_AXIS));
         commitBox1 = new JComboBox<>();
@@ -117,6 +85,35 @@ public class GitDiffViewApp extends JFrame {
         });
         commitBox2.addActionListener(e -> fileListModel.clear());
         showFilesButton = new JButton("Show Diff Files");
+
+        // Encoding selection dropdown (editable)
+        java.util.List<String> encodings = new ArrayList<>(Arrays.asList("UTF-8", "Shift_JIS", "EUC-JP", "ISO-8859-1", "US-ASCII"));
+        encodingBox = new JComboBox<>(encodings.toArray(new String[0]));
+        encodingBox.setEditable(true);
+        encodingBox.setSelectedItem(currentEncoding);
+        encodingBox.setMaximumSize(new Dimension(120, 26));
+
+        encodingBox.addActionListener(e -> {
+            String selected = (String) encodingBox.getEditor().getItem();
+            if (selected == null || selected.isEmpty()) return;
+            if (!selected.equals(currentEncoding)) {
+                if (Charset.isSupported(selected)) {
+                    // Move selected encoding to top
+                    DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) encodingBox.getModel();
+                    model.removeElement(selected);
+                    model.insertElementAt(selected, 0);
+                    encodingBox.setSelectedIndex(0);
+                    currentEncoding = selected;
+                    showDiffForSelectedFile();
+                } else {
+                    // Show error dialog for unknown encoding
+                    JOptionPane.showMessageDialog(this, "Unknown encoding: " + selected, "Encoding Error", JOptionPane.ERROR_MESSAGE);
+                    // Revert to previous encoding in the dropdown
+                    encodingBox.setSelectedItem(currentEncoding);
+                }
+            }
+        });
+
         commitPanel.add(Box.createHorizontalStrut(8));
         commitPanel.add(new JLabel("Commit 1:"));
         commitPanel.add(Box.createHorizontalStrut(4));
@@ -127,25 +124,29 @@ public class GitDiffViewApp extends JFrame {
         commitPanel.add(commitBox2);
         commitPanel.add(Box.createHorizontalStrut(8));
         commitPanel.add(showFilesButton);
+        commitPanel.add(Box.createHorizontalStrut(16));
+        commitPanel.add(new JLabel("Encoding:"));
+        commitPanel.add(Box.createHorizontalStrut(4));
+        commitPanel.add(encodingBox);
         commitPanel.add(Box.createHorizontalGlue());
-        
+
         // Panel for both rows
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         topPanel.add(repoPanel);
         topPanel.add(commitPanel);
         add(topPanel, BorderLayout.NORTH);
-        
+
         fileListModel = new DefaultListModel<>();
         fileList = new JList<>(fileListModel);
         JScrollPane fileScroll = new JScrollPane(fileList);
         fileScroll.setPreferredSize(new Dimension(250, 0));
         add(fileScroll, BorderLayout.WEST);
-        
+
         diffArea = new DiffColorTextArea();
         JScrollPane diffScroll = new JScrollPane(diffArea);
         add(diffScroll, BorderLayout.CENTER);
-        
+
         loadButton.addActionListener(e -> loadCommits());
         showFilesButton.addActionListener(e -> loadDiffFiles());
         fileList.addListSelectionListener(e -> {
@@ -278,12 +279,14 @@ public class GitDiffViewApp extends JFrame {
         String c1 = commitIds.get(idx1);
         String c2 = commitIds.get(idx2);
         try {
-            // diff in order: commit2, commit1
+            // Use selected encoding for diff output
             ProcessBuilder pb = new ProcessBuilder(
-            "git", "-C", repoPath, "diff", c2, c1, "--", file
+                "git", "-C", repoPath, "diff", c2, c1, "--", file
             );
             Process proc = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            InputStream is = proc.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is, Charset.forName(currentEncoding));
+            BufferedReader reader = new BufferedReader(isr);
             StringBuilder diff = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
