@@ -4,12 +4,11 @@ import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
-import java.io.IOException;
 
 public class DiffColorTextArea extends JTextPane {
-    private final Color addColor;
-    private final Color delColor;
-    private final Color headColor;
+    private Color addColor = Color.GREEN;
+    private Color delColor = Color.RED;
+    private Color headColor = Color.BLUE;
 
     public DiffColorTextArea(final boolean color) {
         if ( color ) {
@@ -23,6 +22,22 @@ public class DiffColorTextArea extends JTextPane {
         }
         setEditable(false);
         setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+    }
+
+    public DiffColorTextArea(Color addColor, Color delColor, Color headColor) {
+        this.addColor = addColor;
+        this.delColor = delColor;
+        this.headColor = headColor;
+        setEditable(false);
+        setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
+    }
+
+    public void setColors(Color add, Color del, Color head) {
+        this.addColor = add;
+        this.delColor = del;
+        this.headColor = head;
+        // 再描画のためテキストを再セット
+        setDiffText(getText());
     }
 
     public void setDiffText(String diff) {

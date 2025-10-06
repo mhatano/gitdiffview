@@ -34,6 +34,13 @@ public class GitDiffViewApp extends JFrame {
     private static final String PREF_KEY_ENCODING_HISTORY = "encodingHistory";
     private Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
 
+    // 色選択ダイアログを開くボタンを追加
+    private JButton colorSchemeButton;
+    // 現在のカラースキーム
+    private Color addColor = Color.GREEN;
+    private Color delColor = Color.RED;
+    private Color headColor = Color.BLUE;
+
     public GitDiffViewApp() {
         setTitle("Git Diff Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -226,7 +233,7 @@ public class GitDiffViewApp extends JFrame {
         fileScroll.setPreferredSize(new Dimension(250, 0));
         add(fileScroll, BorderLayout.WEST);
 
-        diffArea = new DiffColorTextArea(args.length==0?true:false);
+        diffArea = new DiffColorTextArea(addColor, delColor, headColor);
         Font currFont = diffArea.getFont();
         Font newFont = new Font("Consolas",currFont.getStyle(),currFont.getSize() - 2);
         if ( newFont.getFamily().equals("Dialog") ) {
@@ -262,6 +269,10 @@ public class GitDiffViewApp extends JFrame {
                 saveEncodingHistory();
             }
         });
+
+        colorSchemeButton = new JButton("Config Diff Colors");
+        colorSchemeButton.addActionListener(e -> showColorSchemeDialog());
+        repoPanel.add(colorSchemeButton);
     }
 
     // Save encoding history to preferences (top 10, last used at top)
@@ -411,6 +422,81 @@ public class GitDiffViewApp extends JFrame {
         } catch (IOException ex) {
             diffArea.setText("Failed to load diff: " + ex.getMessage());
         }
+    }
+
+    private void showColorSchemeDialog() {
+        JDialog dialog = new JDialog(this, "Diff色スキーム設定", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5,5,5,5);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(new JLabel("追加行(add):"), gbc);
+        gbc.gridy++;
+        dialog.add(new JLabel("削除行(del):"), gbc);
+        gbc.gridy++;
+        dialog.add(new JLabel("ヘッダ(head):"), gbc);
+
+        String[] colorNames = {"GREEN", "RED", "BLUE", "BLACK", "CYAN", "MAGENTA", "ORANGE", "PINK", "YELLOW", "GRAY"};
+        Color[] colorValues = {Color.GREEN, Color.RED, Color.BLUE, Color.BLACK, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW, Color.GRAY};
+        JComboBox<String> addBox = new JComboBox<>(colorNames);
+        JComboBox<String> delBox = new JComboBox<>(colorNames);
+        JComboBox<String> headBox = new JComboBox<>(colorNames);
+        addBox.setSelectedItem("GREEN");
+        delBox.setSelectedItem("RED");
+        headBox.setSelectedItem("BLUE");
+        gbc.gridx = 1; gbc.gridy = 0;
+        dialog.add(addBox, gbc);
+        gbc.gridy++;
+        dialog.add(delBox, gbc);
+        gbc.gridy++;
+        dialog.add(headBox, gbc);
+
+        JButton okBtn = new JButton("OK");
+        JButton cancelBtn = new JButton("キャンセル");
+        gbc.gridx = 0; gbc.gridy++;
+        dialog.add(okBtn, gbc);
+        gbc.gridx = 1;
+        dialog.add(cancelBtn, gbc);
+
+        // 現在の色をデフォルトに反映
+        int addIdx = 0, delIdx = 1, headIdx = 2;
+        for (int i = 0; i < colorValues.length; i++) {
+            if (addColor.equals(colorValues[i])) addIdx = i;
+            if (delColor.equals(colorValues[i])) delIdx = i;
+            if (headColor.equals(colorValues[i])) headIdx = i;
+        }
+        addBox.setSelectedIndex(addIdx);
+        delBox.setSelectedIndex(delIdx);
+        headBox.setSelectedIndex(headIdx);
+
+        JButton convBtn = new JButton("Select Conventional Colors");
+        gbc.gridx = 0; gbc.gridy++;
+        gbc.gridwidth = 2;
+        dialog.add(convBtn, gbc);
+        gbc.gridwidth = 1;
+
+        convBtn.addActionListener(e -> {
+            addBox.setSelectedItem("GREEN");
+            delBox.setSelectedItem("RED");
+            headBox.setSelectedItem("BLUE");
+        });
+
+        okBtn.setEnabled(!addBox.getSelectedItem().equals(delBox.getSelectedItem()));
+        ItemListener checkListener = e -> okBtn.setEnabled(!addBox.getSelectedItem().equals(delBox.getSelectedItem()));
+        addBox.addItemListener(checkListener);
+        delBox.addItemListener(checkListener);
+
+        okBtn.addActionListener(e -> {
+            addColor = colorValues[addBox.getSelectedIndex()];
+            delColor = colorValues[delBox.getSelectedIndex()];
+            headColor = colorValues[headBox.getSelectedIndex()];
+            diffArea.setColors(addColor, delColor, headColor);
+            dialog.dispose();
+        });
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private static String[] args;
