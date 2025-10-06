@@ -34,9 +34,13 @@ public class RepoHistoryManager {
             if (isGitRepo(s)) set.add(s);
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(HISTORY_FILE))) {
+            bw.write(selected);
+            bw.newLine();
             for (String s : set) {
-                bw.write(s);
-                bw.newLine();
+                if ( !s.equals(selected) ) {
+                    bw.write(s);
+                    bw.newLine();
+                }
             }
         } catch (IOException e) {
             // ignore

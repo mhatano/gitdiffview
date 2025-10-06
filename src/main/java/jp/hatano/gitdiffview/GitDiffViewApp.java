@@ -30,6 +30,7 @@ public class GitDiffViewApp extends JFrame {
     private static final String PREF_KEY_WIN_Y = "windowY";
     private static final String PREF_KEY_WIN_W = "windowW";
     private static final String PREF_KEY_WIN_H = "windowH";
+    private static final String PREF_KEY_LAST_REPOSITORY = "lastRepository";
     private static final String PREF_KEY_ENCODING_HISTORY = "encodingHistory";
     private Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
 
@@ -52,7 +53,9 @@ public class GitDiffViewApp extends JFrame {
         java.util.List<String> repoHistory = RepoHistoryManager.loadHistory();
         repoBox = new JComboBox<>(repoHistory.toArray(new String[0]));
         repoBox.setEditable(true);
-        if (!repoHistory.isEmpty()) repoBox.setSelectedIndex(0);
+        String lastRepo = prefs.get(PREF_KEY_LAST_REPOSITORY,repoHistory.get(0));
+        repoBox.setSelectedItem(lastRepo);
+        RepoHistoryManager.saveHistory(repoHistory,lastRepo);
         repoSelectButton = new JButton("...");
         branchBox = new JComboBox<>();
         branchBox.setPreferredSize(new Dimension(220, 26));
@@ -70,6 +73,47 @@ public class GitDiffViewApp extends JFrame {
         repoPanel.add(Box.createHorizontalStrut(8));
         repoPanel.add(loadButton);
         repoPanel.add(Box.createHorizontalGlue());
+
+        // Repository select dialog
+        repoSelectButton.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int ret = chooser.showOpenDialog(this);
+            java.util.List<String> hist = RepoHistoryManager.loadHistory();
+            if ( ret == JFileChooser.APPROVE_OPTION ) {
+                File dir = chooser.getSelectedFile();
+                repoBox.setSelectedItem(dir.getAbsolutePath());
+                loadBranches();
+                String path = dir.getAbsolutePath();
+                if ( RepoHistoryManager.isGitRepo(path) ) {
+                    hist.add(path);
+                }
+                RepoHistoryManager.saveHistory(hist,path);
+            }
+        });
+        repoBox.addActionListener(e -> {
+            String prev = repoPath;
+            String current = repoBox.getEditor().getItem().toString().trim();
+            if ( prev != null && !prev.isEmpty() && !prev.equals(current) && RepoHistoryManager.isGitRepo(prev) ) {
+                java.util.List<String> hist = RepoHistoryManager.loadHistory();
+                for ( int i = 0 ; i < repoBox.getItemCount() ; i ++ ) {
+                    String s = repoBox.getItemAt(i);
+                    if ( RepoHistoryManager.isGitRepo(s) ) {
+                        hist.add(s);
+                    }
+                }
+                RepoHistoryManager.saveHistory(hist,prev);
+                if ( ((DefaultComboBoxModel<String>)repoBox.getModel()).getIndexOf(prev) < 0 ) {
+                    repoBox.addItem(prev);
+                }
+            }
+            loadBranches();
+        });
+        repoBox.getEditor().addActionListener(e -> loadBranches());
+        branchBox.addActionListener(e -> {
+            Object sel = branchBox.getSelectedItem();
+            branch = sel == null ? "" : sel.toString();
+        });
 
         // 2nd row: Commit selection + Encoding
         JPanel commitPanel = new JPanel();
@@ -182,7 +226,16 @@ public class GitDiffViewApp extends JFrame {
         fileScroll.setPreferredSize(new Dimension(250, 0));
         add(fileScroll, BorderLayout.WEST);
 
-        diffArea = new DiffColorTextArea();
+        diffArea = new DiffColorTextArea(args.length==0?true:false);
+        Font currFont = diffArea.getFont();
+        Font newFont = new Font("Consolas",currFont.getStyle(),currFont.getSize() - 2);
+        if ( newFont.getFamily().equals("Dialog") ) {
+            newFont = new Font("Menlo",currFont.getStyle(),currFont.getSize() - 2);
+        }
+        if ( newFont.getFamily().equals("Dialog") ) {
+            newFont = new Font("Dejavu Sans Mono",currFont.getStyle(),currFont.getSize() - 2);
+        }
+        diffArea.setFont(newFont);
         JScrollPane diffScroll = new JScrollPane(diffArea);
         add(diffScroll, BorderLayout.CENTER);
 
@@ -205,6 +258,7 @@ public class GitDiffViewApp extends JFrame {
                 prefs.putInt(PREF_KEY_WIN_Y, getY());
                 prefs.putInt(PREF_KEY_WIN_W, getWidth());
                 prefs.putInt(PREF_KEY_WIN_H, getHeight());
+                prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
                 saveEncodingHistory();
             }
         });
@@ -359,7 +413,10 @@ public class GitDiffViewApp extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
+    private static String[] args;
+
+    public static void main(String[] options) {
+        args = options;
         SwingUtilities.invokeLater(() -> {
             GitDiffViewApp app = new GitDiffViewApp();
             // Set last selected repository
