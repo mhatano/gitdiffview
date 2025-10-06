@@ -220,6 +220,12 @@ public class GitDiffViewApp extends JFrame {
         commitPanel.add(encodingBox);
         commitPanel.add(Box.createHorizontalGlue());
 
+        // Config Diff Colorsボタンを二段目(commitPanel)に移動
+        colorSchemeButton = new JButton("Config Diff Colors");
+        colorSchemeButton.addActionListener(e -> showColorSchemeDialog());
+        commitPanel.add(Box.createHorizontalStrut(8));
+        commitPanel.add(colorSchemeButton);
+
         // Panel for both rows
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
@@ -269,10 +275,6 @@ public class GitDiffViewApp extends JFrame {
                 saveEncodingHistory();
             }
         });
-
-        colorSchemeButton = new JButton("Config Diff Colors");
-        colorSchemeButton.addActionListener(e -> showColorSchemeDialog());
-        repoPanel.add(colorSchemeButton);
     }
 
     // Save encoding history to preferences (top 10, last used at top)
@@ -286,87 +288,109 @@ public class GitDiffViewApp extends JFrame {
         prefs.put(PREF_KEY_ENCODING_HISTORY, sb.toString());
     }
 
+    private void setWaitCursor(boolean wait) {
+        Cursor cursor = wait ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor();
+        setCursor(cursor);
+        // 主要な子コンポーネントにも適用（必要に応じて追加）
+        repoBox.setCursor(cursor);
+        branchBox.setCursor(cursor);
+        commitBox1.setCursor(cursor);
+        commitBox2.setCursor(cursor);
+        fileList.setCursor(cursor);
+        diffArea.setCursor(cursor);
+    }
+
     private void loadCommits() {
-        repoPath = repoBox.getEditor().getItem().toString().trim();
-        Object sel = branchBox.getSelectedItem();
-        branch = sel == null ? "" : sel.toString();
-        commitBox1.removeAllItems();
-        commitBox2.removeAllItems();
-        commitBox1.setEnabled(false); // Temporarily disable
-        commitBox2.setEnabled(false); // Temporarily disable
-        commitBox1.revalidate();
-        commitBox1.repaint();
-        commitBox2.revalidate();
-        commitBox2.repaint();
-        commitIds.clear();
-        int count = 0;
+        setWaitCursor(true);
         try {
-            ProcessBuilder pb = new ProcessBuilder(
-                "git", "-C", repoPath, "log", branch, "--pretty=format:%H %s"
-            );
-            Process proc = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(" ", 2);
-                if (parts.length > 0) {
-                    commitIds.add(parts[0]);
-                    String label = parts[0] + (parts.length > 1 ? (" " + parts[1]) : "");
-                    commitBox1.addItem(label);
-                    commitBox2.addItem(label);
-                    count++;
+            repoPath = repoBox.getEditor().getItem().toString().trim();
+            Object sel = branchBox.getSelectedItem();
+            branch = sel == null ? "" : sel.toString();
+            commitBox1.removeAllItems();
+            commitBox2.removeAllItems();
+            commitBox1.setEnabled(false); // Temporarily disable
+            commitBox2.setEnabled(false); // Temporarily disable
+            commitBox1.revalidate();
+            commitBox1.repaint();
+            commitBox2.revalidate();
+            commitBox2.repaint();
+            commitIds.clear();
+            int count = 0;
+            try {
+                ProcessBuilder pb = new ProcessBuilder(
+                    "git", "-C", repoPath, "log", branch, "--pretty=format:%H %s"
+                );
+                Process proc = pb.start();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(" ", 2);
+                    if (parts.length > 0) {
+                        commitIds.add(parts[0]);
+                        String label = parts[0] + (parts.length > 1 ? (" " + parts[1]) : "");
+                        commitBox1.addItem(label);
+                        commitBox2.addItem(label);
+                        count++;
+                    }
                 }
+                if (count > 0) {
+                    commitBox1.setSelectedIndex(0);
+                    if (commitBox2.getItemCount() > 1) commitBox2.setSelectedIndex(1);
+                    commitBox1.setEnabled(true); // Enable if items exist
+                    commitBox2.setEnabled(true);
+                } else {
+                    commitBox1.setEnabled(false); // Just in case
+                    commitBox2.setEnabled(false);
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to load commits: " + ex.getMessage());
             }
-            if (count > 0) {
-                commitBox1.setSelectedIndex(0);
-                if (commitBox2.getItemCount() > 1) commitBox2.setSelectedIndex(1);
-                commitBox1.setEnabled(true); // Enable if items exist
-                commitBox2.setEnabled(true);
-            } else {
-                commitBox1.setEnabled(false); // Just in case
-                commitBox2.setEnabled(false);
-            }
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(this, "Failed to load commits: " + ex.getMessage());
+        } finally {
+            setWaitCursor(false);
         }
     }
 
     // Get local branch list of repository and set to branchBox
     private void loadBranches() {
-        String path = repoBox.getEditor().getItem().toString().trim();
-        branchBox.removeAllItems();
-        branchBox.setEnabled(false);
-        // Clear and disable commit list when updating branch list
-        commitBox1.removeAllItems();
-        commitBox2.removeAllItems();
-        commitBox1.setEnabled(false);
-        commitBox2.setEnabled(false);
-        commitIds.clear();
-        if (path.isEmpty()) return;
-        java.util.List<String> branches = new ArrayList<>();
+        setWaitCursor(true);
         try {
-            ProcessBuilder pb = new ProcessBuilder("git", "-C", path, "branch", "--list");
-            Process proc = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.replace("*", "").trim();
-                if (!line.isEmpty()) branches.add(line);
-            }
-        } catch (IOException ex) {
-            // ignore
-        }
-        // Default is master if exists, otherwise first
-        int defIdx = 0;
-        for (int i = 0; i < branches.size(); i++) {
-            branchBox.addItem(branches.get(i));
-            if (branches.get(i).equals("master")) defIdx = i;
-        }
-        if (branchBox.getItemCount() > 0) {
-            branchBox.setSelectedIndex(defIdx);
-            branchBox.setEnabled(true);
-        } else {
+            String path = repoBox.getEditor().getItem().toString().trim();
+            branchBox.removeAllItems();
             branchBox.setEnabled(false);
+            // Clear and disable commit list when updating branch list
+            commitBox1.removeAllItems();
+            commitBox2.removeAllItems();
+            commitBox1.setEnabled(false);
+            commitBox2.setEnabled(false);
+            commitIds.clear();
+            if (path.isEmpty()) return;
+            java.util.List<String> branches = new ArrayList<>();
+            try {
+                ProcessBuilder pb = new ProcessBuilder("git", "-C", path, "branch", "--list");
+                Process proc = pb.start();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.replace("*", "").trim();
+                    if (!line.isEmpty()) branches.add(line);
+                }
+            } catch (IOException ex) {
+                // ignore
+            }
+            // Default is master if exists, otherwise first
+            int defIdx = 0;
+            for (int i = 0; i < branches.size(); i++) {
+                branchBox.addItem(branches.get(i));
+                if (branches.get(i).equals("master")) defIdx = i;
+            }
+            if (branchBox.getItemCount() > 0) {
+                branchBox.setSelectedIndex(defIdx);
+                branchBox.setEnabled(true);
+            } else {
+                branchBox.setEnabled(false);
+            }
+        } finally {
+            setWaitCursor(false);
         }
     }
 
