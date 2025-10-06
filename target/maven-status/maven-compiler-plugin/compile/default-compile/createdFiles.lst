@@ -1,9 +1,8 @@
 jp/hatano/gitdiffview/GitDiffViewApp$2.class
 jp/hatano/gitdiffview/App.class
-jp/hatano/gitdiffview/GitDiffViewApp$5.class
 jp/hatano/gitdiffview/DiffColorTextArea.class
 jp/hatano/gitdiffview/GitDiffViewApp$3.class
+jp/hatano/gitdiffview/DiffColorTextArea$HtmlSelection.class
 jp/hatano/gitdiffview/GitDiffViewApp$1.class
-jp/hatano/gitdiffview/GitDiffViewApp$4.class
 jp/hatano/gitdiffview/GitDiffViewApp.class
 jp/hatano/gitdiffview/RepoHistoryManager.class
