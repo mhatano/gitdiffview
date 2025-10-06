@@ -36,7 +36,7 @@ public class DiffColorTextArea extends JTextPane {
         this.addColor = add;
         this.delColor = del;
         this.headColor = head;
-        // 再描画のためテキストを再セット
+        // Reset text to redraw with new colors
         setDiffText(getText());
     }
 

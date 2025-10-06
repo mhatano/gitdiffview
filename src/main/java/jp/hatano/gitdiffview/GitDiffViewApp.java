@@ -34,9 +34,9 @@ public class GitDiffViewApp extends JFrame {
     private static final String PREF_KEY_ENCODING_HISTORY = "encodingHistory";
     private Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
 
-    // 色選択ダイアログを開くボタンを追加
+    // Button to open color scheme dialog
     private JButton colorSchemeButton;
-    // 現在のカラースキーム
+    // Current color scheme
     private Color addColor = Color.GREEN;
     private Color delColor = Color.RED;
     private Color headColor = Color.BLUE;
@@ -220,7 +220,7 @@ public class GitDiffViewApp extends JFrame {
         commitPanel.add(encodingBox);
         commitPanel.add(Box.createHorizontalGlue());
 
-        // Config Diff Colorsボタンを二段目(commitPanel)に移動
+        // Move Config Diff Colors button to the second row (commitPanel)
         colorSchemeButton = new JButton("Config Diff Colors");
         colorSchemeButton.addActionListener(e -> showColorSchemeDialog());
         commitPanel.add(Box.createHorizontalStrut(8));
@@ -291,7 +291,7 @@ public class GitDiffViewApp extends JFrame {
     private void setWaitCursor(boolean wait) {
         Cursor cursor = wait ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor();
         setCursor(cursor);
-        // 主要な子コンポーネントにも適用（必要に応じて追加）
+        // Also apply to main child components (add more if needed)
         repoBox.setCursor(cursor);
         branchBox.setCursor(cursor);
         commitBox1.setCursor(cursor);
@@ -452,16 +452,16 @@ public class GitDiffViewApp extends JFrame {
     }
 
     private void showColorSchemeDialog() {
-        JDialog dialog = new JDialog(this, "Diff色スキーム設定", true);
+        JDialog dialog = new JDialog(this, "Config Diff Colors", true);
         dialog.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5,5,5,5);
         gbc.gridx = 0; gbc.gridy = 0;
-        dialog.add(new JLabel("追加行(add):"), gbc);
+        dialog.add(new JLabel("Added Lines:"), gbc);
         gbc.gridy++;
-        dialog.add(new JLabel("削除行(del):"), gbc);
+        dialog.add(new JLabel("Removed Lines:"), gbc);
         gbc.gridy++;
-        dialog.add(new JLabel("ヘッダ(head):"), gbc);
+        dialog.add(new JLabel("Header Lines:"), gbc);
 
         String[] colorNames = {"GREEN", "RED", "BLUE", "BLACK", "CYAN", "MAGENTA", "ORANGE", "PINK", "YELLOW", "GRAY"};
         Color[] colorValues = {Color.GREEN, Color.RED, Color.BLUE, Color.BLACK, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW, Color.GRAY};
@@ -479,13 +479,13 @@ public class GitDiffViewApp extends JFrame {
         dialog.add(headBox, gbc);
 
         JButton okBtn = new JButton("OK");
-        JButton cancelBtn = new JButton("キャンセル");
+        JButton cancelBtn = new JButton("Cancel");
         gbc.gridx = 0; gbc.gridy++;
         dialog.add(okBtn, gbc);
         gbc.gridx = 1;
         dialog.add(cancelBtn, gbc);
 
-        // 現在の色をデフォルトに反映
+        // Reflect the current colors as the default selection
         int addIdx = 0, delIdx = 1, headIdx = 2;
         for (int i = 0; i < colorValues.length; i++) {
             if (addColor.equals(colorValues[i])) addIdx = i;
@@ -526,10 +526,7 @@ public class GitDiffViewApp extends JFrame {
         dialog.setVisible(true);
     }
 
-    private static String[] args;
-
     public static void main(String[] options) {
-        args = options;
         SwingUtilities.invokeLater(() -> {
             GitDiffViewApp app = new GitDiffViewApp();
             // Set last selected repository
