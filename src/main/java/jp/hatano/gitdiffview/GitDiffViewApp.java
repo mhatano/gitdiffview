@@ -443,8 +443,11 @@ public class GitDiffViewApp extends JFrame {
                 diff.append(line).append("\n");
             }
             diffArea.setDiffText(diff.toString());
+            // Scroll to top after setting diff text
+            SwingUtilities.invokeLater(() -> diffArea.setCaretPosition(0));
         } catch (IOException ex) {
             diffArea.setText("Failed to load diff: " + ex.getMessage());
+            SwingUtilities.invokeLater(() -> diffArea.setCaretPosition(0));
         }
     }
 
