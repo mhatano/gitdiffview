@@ -2,3 +2,4 @@
 /home/hatano/VSCProj/gitdiffview/src/main/java/jp/hatano/gitdiffview/App.java
 /home/hatano/VSCProj/gitdiffview/src/main/java/jp/hatano/gitdiffview/GitDiffViewApp.java
 /home/hatano/VSCProj/gitdiffview/src/main/java/jp/hatano/gitdiffview/RepoHistoryManager.java
+/home/hatano/VSCProj/gitdiffview/src/main/java/jp/hatano/gitdiffview/EncodingHistoryManager.java

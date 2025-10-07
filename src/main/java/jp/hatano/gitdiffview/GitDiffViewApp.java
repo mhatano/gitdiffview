@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.prefs.Preferences;
 
 public class GitDiffViewApp extends JFrame {
+    private EncodingHistoryManager encodingHistoryManager;
     private JComboBox<String> repoBox;
     private JButton repoSelectButton;
     private JComboBox<String> branchBox;
@@ -45,6 +46,7 @@ public class GitDiffViewApp extends JFrame {
     Color headColor = Color.BLUE;
 
     public GitDiffViewApp() {
+        encodingHistoryManager = new EncodingHistoryManager(GitDiffViewApp.class);
         setTitle("Git Diff Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -196,7 +198,7 @@ public class GitDiffViewApp extends JFrame {
                     model.insertElementAt(selected, 0);
                     encodingBox.setSelectedIndex(0);
                     currentEncoding = selected;
-                    saveEncodingHistory();
+                    encodingHistoryManager.saveEncodingHistory((DefaultComboBoxModel<String>) encodingBox.getModel());
                     showDiffForSelectedFile();
                 } else {
                     // Show error dialog for unknown encoding
@@ -282,22 +284,14 @@ public class GitDiffViewApp extends JFrame {
                 prefs.putInt(PREF_KEY_WIN_W, getWidth());
                 prefs.putInt(PREF_KEY_WIN_H, getHeight());
                 prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
-                saveEncodingHistory();
+                encodingHistoryManager.saveEncodingHistory((DefaultComboBoxModel<String>) encodingBox.getModel());
                 diffArea.saveDiffColors(GitDiffViewApp.this);
             }
         });
     }
 
     // Save encoding history to preferences (top 10, last used at top)
-    private void saveEncodingHistory() {
-        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) encodingBox.getModel();
-        StringBuilder sb = new StringBuilder();
-        int max = Math.min(10, model.getSize());
-        for (int i = 0; i < max; i++) {
-            sb.append(model.getElementAt(i)).append("\n");
-        }
-        prefs.put(PREF_KEY_ENCODING_HISTORY, sb.toString());
-    }
+    // Encoding history logic moved to EncodingHistoryManager
     
     private void setWaitCursor(boolean wait) {
         Cursor cursor = wait ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor();
