@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
+import java.awt.event.ItemListener;
 
 public class DiffColorTextArea extends JTextPane {
     private Color addColor = new Color(0,128,0);
@@ -104,6 +105,103 @@ public class DiffColorTextArea extends JTextPane {
             clipboard.setContents(new HtmlSelection(plain.toString(), html.toString()), null);
         } catch (BadLocationException e) {
             e.printStackTrace();
+        }
+    }
+
+    void saveDiffColors(GitDiffViewApp gitDiffViewApp) {
+        String strAddColor = String.format("%d,%d,%d",gitDiffViewApp.addColor.getRed(), gitDiffViewApp.addColor.getGreen(), gitDiffViewApp.addColor.getBlue());
+        String strDelColor = String.format("%d,%d,%d",gitDiffViewApp.delColor.getRed(), gitDiffViewApp.delColor.getGreen(), gitDiffViewApp.delColor.getBlue());
+        String strHeadColor = String.format("%d,%d,%d",gitDiffViewApp.headColor.getRed(), gitDiffViewApp.headColor.getGreen(), gitDiffViewApp.headColor.getBlue());
+        gitDiffViewApp.prefs.put(GitDiffViewApp.PREF_DIFF_ADD_COLOR, strAddColor);
+        gitDiffViewApp.prefs.put(GitDiffViewApp.PREF_DIFF_DEL_COLOR, strDelColor);
+        gitDiffViewApp.prefs.put(GitDiffViewApp.PREF_DIFF_HEAD_COLOR, strHeadColor);
+    }
+
+    void showColorSchemeDialog(GitDiffViewApp gitDiffViewApp) {
+        JDialog dialog = new JDialog(gitDiffViewApp, "Config Diff Colors", true);
+        dialog.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5,5,5,5);
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(new JLabel("Added Lines:"), gbc);
+        gbc.gridy++;
+        dialog.add(new JLabel("Removed Lines:"), gbc);
+        gbc.gridy++;
+        dialog.add(new JLabel("Header Lines:"), gbc);
+    
+        String[] colorNames = {"GREEN", "RED", "BLUE", "BLACK", "CYAN", "MAGENTA", "ORANGE", "PINK", "YELLOW", "GRAY", "BRIGHTGREEN"};
+        Color[] colorValues = {new Color(0,128,0), Color.RED, Color.BLUE, Color.BLACK, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW, Color.GRAY, Color.GREEN};
+        JComboBox<String> addBox = new JComboBox<>(colorNames);
+        JComboBox<String> delBox = new JComboBox<>(colorNames);
+        JComboBox<String> headBox = new JComboBox<>(colorNames);
+        addBox.setSelectedItem("GREEN");
+        delBox.setSelectedItem("RED");
+        headBox.setSelectedItem("BLUE");
+        gbc.gridx = 1; gbc.gridy = 0;
+        dialog.add(addBox, gbc);
+        gbc.gridy++;
+        dialog.add(delBox, gbc);
+        gbc.gridy++;
+        dialog.add(headBox, gbc);
+    
+        JButton okBtn = new JButton("OK");
+        JButton cancelBtn = new JButton("Cancel");
+        gbc.gridx = 0; gbc.gridy++;
+        dialog.add(okBtn, gbc);
+        gbc.gridx = 1;
+        dialog.add(cancelBtn, gbc);
+    
+        // Reflect the current colors as the default selection
+        int addIdx = 0, delIdx = 1, headIdx = 2;
+        for (int i = 0; i < colorValues.length; i++) {
+            if (gitDiffViewApp.addColor.equals(colorValues[i])) addIdx = i;
+            if (gitDiffViewApp.delColor.equals(colorValues[i])) delIdx = i;
+            if (gitDiffViewApp.headColor.equals(colorValues[i])) headIdx = i;
+        }
+        addBox.setSelectedIndex(addIdx);
+        delBox.setSelectedIndex(delIdx);
+        headBox.setSelectedIndex(headIdx);
+    
+        JButton convBtn = new JButton("Select Conventional Colors");
+        gbc.gridx = 0; gbc.gridy++;
+        gbc.gridwidth = 2;
+        dialog.add(convBtn, gbc);
+        gbc.gridwidth = 1;
+    
+        convBtn.addActionListener(e -> {
+            addBox.setSelectedItem("GREEN");
+            delBox.setSelectedItem("RED");
+            headBox.setSelectedItem("BLUE");
+        });
+    
+        okBtn.setEnabled(!addBox.getSelectedItem().equals(delBox.getSelectedItem()));
+        ItemListener checkListener = e -> okBtn.setEnabled(!addBox.getSelectedItem().equals(delBox.getSelectedItem()));
+        addBox.addItemListener(checkListener);
+        delBox.addItemListener(checkListener);
+    
+        okBtn.addActionListener(e -> {
+            gitDiffViewApp.addColor = colorValues[addBox.getSelectedIndex()];
+            gitDiffViewApp.delColor = colorValues[delBox.getSelectedIndex()];
+            gitDiffViewApp.headColor = colorValues[headBox.getSelectedIndex()];
+            setColors(gitDiffViewApp.addColor, gitDiffViewApp.delColor, gitDiffViewApp.headColor);
+            dialog.dispose();
+        });
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        dialog.pack();
+        dialog.setLocationRelativeTo(gitDiffViewApp);
+        dialog.setVisible(true);
+    }
+
+    public static Color parseColor(String string) {
+        try {
+            String[] parts = string.split(",");
+            if (parts.length != 3) return Color.BLACK;
+            int r = Integer.parseInt(parts[0].trim());
+            int g = Integer.parseInt(parts[1].trim());
+            int b = Integer.parseInt(parts[2].trim());
+            return new Color(r, g, b);
+        } catch (Exception e) {
+            return Color.BLACK;
         }
     }
 

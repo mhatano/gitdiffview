@@ -32,17 +32,17 @@ public class GitDiffViewApp extends JFrame {
     private static final String PREF_KEY_WIN_H = "windowH";
     private static final String PREF_KEY_LAST_REPOSITORY = "lastRepository";
     private static final String PREF_KEY_ENCODING_HISTORY = "encodingHistory";
-    private static final String PREF_DIFF_ADD_COLOR = "diffAddColor";
-    private static final String PREF_DIFF_DEL_COLOR = "diffDelColor";
-    private static final String PREF_DIFF_HEAD_COLOR = "diffHeadColor";
-    private Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
+    static final String PREF_DIFF_ADD_COLOR = "diffAddColor";
+    static final String PREF_DIFF_DEL_COLOR = "diffDelColor";
+    static final String PREF_DIFF_HEAD_COLOR = "diffHeadColor";
+    Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
 
     // Button to open color scheme dialog
     private JButton colorSchemeButton;
     // Current color scheme
-    private Color addColor = new Color(0,128,0);;
-    private Color delColor = Color.RED;
-    private Color headColor = Color.BLUE;
+    Color addColor = new Color(0,128,0);;
+    Color delColor = Color.RED;
+    Color headColor = Color.BLUE;
 
     public GitDiffViewApp() {
         setTitle("Git Diff Viewer");
@@ -225,7 +225,7 @@ public class GitDiffViewApp extends JFrame {
 
         // Move Config Diff Colors button to the second row (commitPanel)
         colorSchemeButton = new JButton("Config Diff Colors");
-        colorSchemeButton.addActionListener(e -> showColorSchemeDialog());
+        colorSchemeButton.addActionListener(e -> diffArea.showColorSchemeDialog(this));
         commitPanel.add(Box.createHorizontalStrut(8));
         commitPanel.add(colorSchemeButton);
 
@@ -245,9 +245,9 @@ public class GitDiffViewApp extends JFrame {
         String strAddColor = prefs.get(PREF_DIFF_ADD_COLOR, "0,128,0");
         String strDelColor = prefs.get(PREF_DIFF_DEL_COLOR, "255,0,0");
         String strHeadColor = prefs.get(PREF_DIFF_HEAD_COLOR, "255,255,0");
-        addColor = parseColor(strAddColor);
-        delColor = parseColor(strDelColor);
-        headColor = parseColor(strHeadColor);
+        addColor = DiffColorTextArea.parseColor(strAddColor);
+        delColor = DiffColorTextArea.parseColor(strDelColor);
+        headColor = DiffColorTextArea.parseColor(strHeadColor);
 
         diffArea = new DiffColorTextArea(addColor, delColor, headColor);
         Font currFont = diffArea.getFont();
@@ -283,22 +283,9 @@ public class GitDiffViewApp extends JFrame {
                 prefs.putInt(PREF_KEY_WIN_H, getHeight());
                 prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
                 saveEncodingHistory();
-                saveDiffColors();
+                diffArea.saveDiffColors(GitDiffViewApp.this);
             }
         });
-    }
-
-    private Color parseColor(String string) {
-        try {
-            String[] parts = string.split(",");
-            if (parts.length != 3) return Color.BLACK;
-            int r = Integer.parseInt(parts[0].trim());
-            int g = Integer.parseInt(parts[1].trim());
-            int b = Integer.parseInt(parts[2].trim());
-            return new Color(r, g, b);
-        } catch (Exception e) {
-            return Color.BLACK;
-        }
     }
 
     // Save encoding history to preferences (top 10, last used at top)
@@ -312,15 +299,6 @@ public class GitDiffViewApp extends JFrame {
         prefs.put(PREF_KEY_ENCODING_HISTORY, sb.toString());
     }
     
-    private void saveDiffColors() {
-        String strAddColor = String.format("%d,%d,%d",addColor.getRed(), addColor.getGreen(), addColor.getBlue());
-        String strDelColor = String.format("%d,%d,%d",delColor.getRed(), delColor.getGreen(), delColor.getBlue());
-        String strHeadColor = String.format("%d,%d,%d",headColor.getRed(), headColor.getGreen(), headColor.getBlue());
-        prefs.put(PREF_DIFF_ADD_COLOR, strAddColor);
-        prefs.put(PREF_DIFF_DEL_COLOR, strDelColor);
-        prefs.put(PREF_DIFF_HEAD_COLOR, strHeadColor);
-    }
-
     private void setWaitCursor(boolean wait) {
         Cursor cursor = wait ? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor();
         setCursor(cursor);
@@ -482,81 +460,6 @@ public class GitDiffViewApp extends JFrame {
             diffArea.setText("Failed to load diff: " + ex.getMessage());
             SwingUtilities.invokeLater(() -> diffArea.setCaretPosition(0));
         }
-    }
-
-    private void showColorSchemeDialog() {
-        JDialog dialog = new JDialog(this, "Config Diff Colors", true);
-        dialog.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5,5,5,5);
-        gbc.gridx = 0; gbc.gridy = 0;
-        dialog.add(new JLabel("Added Lines:"), gbc);
-        gbc.gridy++;
-        dialog.add(new JLabel("Removed Lines:"), gbc);
-        gbc.gridy++;
-        dialog.add(new JLabel("Header Lines:"), gbc);
-
-        String[] colorNames = {"GREEN", "RED", "BLUE", "BLACK", "CYAN", "MAGENTA", "ORANGE", "PINK", "YELLOW", "GRAY", "BRIGHTGREEN"};
-        Color[] colorValues = {new Color(0,128,0), Color.RED, Color.BLUE, Color.BLACK, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW, Color.GRAY, Color.GREEN};
-        JComboBox<String> addBox = new JComboBox<>(colorNames);
-        JComboBox<String> delBox = new JComboBox<>(colorNames);
-        JComboBox<String> headBox = new JComboBox<>(colorNames);
-        addBox.setSelectedItem("GREEN");
-        delBox.setSelectedItem("RED");
-        headBox.setSelectedItem("BLUE");
-        gbc.gridx = 1; gbc.gridy = 0;
-        dialog.add(addBox, gbc);
-        gbc.gridy++;
-        dialog.add(delBox, gbc);
-        gbc.gridy++;
-        dialog.add(headBox, gbc);
-
-        JButton okBtn = new JButton("OK");
-        JButton cancelBtn = new JButton("Cancel");
-        gbc.gridx = 0; gbc.gridy++;
-        dialog.add(okBtn, gbc);
-        gbc.gridx = 1;
-        dialog.add(cancelBtn, gbc);
-
-        // Reflect the current colors as the default selection
-        int addIdx = 0, delIdx = 1, headIdx = 2;
-        for (int i = 0; i < colorValues.length; i++) {
-            if (addColor.equals(colorValues[i])) addIdx = i;
-            if (delColor.equals(colorValues[i])) delIdx = i;
-            if (headColor.equals(colorValues[i])) headIdx = i;
-        }
-        addBox.setSelectedIndex(addIdx);
-        delBox.setSelectedIndex(delIdx);
-        headBox.setSelectedIndex(headIdx);
-
-        JButton convBtn = new JButton("Select Conventional Colors");
-        gbc.gridx = 0; gbc.gridy++;
-        gbc.gridwidth = 2;
-        dialog.add(convBtn, gbc);
-        gbc.gridwidth = 1;
-
-        convBtn.addActionListener(e -> {
-            addBox.setSelectedItem("GREEN");
-            delBox.setSelectedItem("RED");
-            headBox.setSelectedItem("BLUE");
-        });
-
-        okBtn.setEnabled(!addBox.getSelectedItem().equals(delBox.getSelectedItem()));
-        ItemListener checkListener = e -> okBtn.setEnabled(!addBox.getSelectedItem().equals(delBox.getSelectedItem()));
-        addBox.addItemListener(checkListener);
-        delBox.addItemListener(checkListener);
-
-        okBtn.addActionListener(e -> {
-            addColor = colorValues[addBox.getSelectedIndex()];
-            delColor = colorValues[delBox.getSelectedIndex()];
-            headColor = colorValues[headBox.getSelectedIndex()];
-            diffArea.setColors(addColor, delColor, headColor);
-            dialog.dispose();
-        });
-        cancelBtn.addActionListener(e -> dialog.dispose());
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
     }
 
     public static void main(String[] options) {
