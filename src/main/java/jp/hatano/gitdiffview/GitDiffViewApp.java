@@ -9,6 +9,15 @@ import java.util.*;
 import java.util.prefs.Preferences;
 
 public class GitDiffViewApp extends JFrame {
+    private final class DefaultListCellRendererExtension extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            String str = value == null ? "" : value.toString();
+            if (str.length() > 30) str = str.substring(0, 28) + "...";
+            return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
+        }
+    }
+
     private EncodingHistoryManager encodingHistoryManager;
     private JComboBox<String> repoBox;
     private JButton repoSelectButton;
@@ -137,23 +146,9 @@ public class GitDiffViewApp extends JFrame {
         commitBox2.setMaximumSize(comboSize);
         commitBox1.setPreferredSize(comboSize);
         commitBox2.setPreferredSize(comboSize);
-        commitBox1.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                String str = value == null ? "" : value.toString();
-                if (str.length() > 30) str = str.substring(0, 28) + "...";
-                return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
-            }
-        });
+        commitBox1.setRenderer(new DefaultListCellRendererExtension());
         commitBox1.addActionListener(e -> fileListModel.clear());
-        commitBox2.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                String str = value == null ? "" : value.toString();
-                if (str.length() > 30) str = str.substring(0, 28) + "...";
-                return super.getListCellRendererComponent(list, str, index, isSelected, cellHasFocus);
-            }
-        });
+        commitBox2.setRenderer(new DefaultListCellRendererExtension());
         commitBox2.addActionListener(e -> fileListModel.clear());
         showFilesButton = new JButton("Show Diff Files");
 

@@ -17,7 +17,7 @@ public class DiffColorTextArea extends JTextPane {
             delColor = Color.BLUE;
             headColor = Color.BLACK;
         } else {
-            addColor = Color.GREEN;
+            addColor = new Color(0,128,0);
             delColor = Color.RED;
             headColor = Color.BLUE;
         }
@@ -134,9 +134,6 @@ public class DiffColorTextArea extends JTextPane {
         JComboBox<String> addBox = new JComboBox<>(colorNames);
         JComboBox<String> delBox = new JComboBox<>(colorNames);
         JComboBox<String> headBox = new JComboBox<>(colorNames);
-        addBox.setSelectedItem("GREEN");
-        delBox.setSelectedItem("RED");
-        headBox.setSelectedItem("BLUE");
         gbc.gridx = 1; gbc.gridy = 0;
         dialog.add(addBox, gbc);
         gbc.gridy++;
