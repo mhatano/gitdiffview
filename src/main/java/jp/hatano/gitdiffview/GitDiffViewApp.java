@@ -32,12 +32,15 @@ public class GitDiffViewApp extends JFrame {
     private static final String PREF_KEY_WIN_H = "windowH";
     private static final String PREF_KEY_LAST_REPOSITORY = "lastRepository";
     private static final String PREF_KEY_ENCODING_HISTORY = "encodingHistory";
+    private static final String PREF_DIFF_ADD_COLOR = "diffAddColor";
+    private static final String PREF_DIFF_DEL_COLOR = "diffDelColor";
+    private static final String PREF_DIFF_HEAD_COLOR = "diffHeadColor";
     private Preferences prefs = Preferences.userNodeForPackage(GitDiffViewApp.class);
 
     // Button to open color scheme dialog
     private JButton colorSchemeButton;
     // Current color scheme
-    private Color addColor = Color.GREEN;
+    private Color addColor = new Color(0,128,0);;
     private Color delColor = Color.RED;
     private Color headColor = Color.BLUE;
 
@@ -239,6 +242,13 @@ public class GitDiffViewApp extends JFrame {
         fileScroll.setPreferredSize(new Dimension(250, 0));
         add(fileScroll, BorderLayout.WEST);
 
+        String strAddColor = prefs.get(PREF_DIFF_ADD_COLOR, "0,128,0");
+        String strDelColor = prefs.get(PREF_DIFF_DEL_COLOR, "255,0,0");
+        String strHeadColor = prefs.get(PREF_DIFF_HEAD_COLOR, "255,255,0");
+        addColor = parseColor(strAddColor);
+        delColor = parseColor(strDelColor);
+        headColor = parseColor(strHeadColor);
+
         diffArea = new DiffColorTextArea(addColor, delColor, headColor);
         Font currFont = diffArea.getFont();
         Font newFont = new Font("Consolas",currFont.getStyle(),currFont.getSize() - 2);
@@ -273,8 +283,22 @@ public class GitDiffViewApp extends JFrame {
                 prefs.putInt(PREF_KEY_WIN_H, getHeight());
                 prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
                 saveEncodingHistory();
+                saveDiffColors();
             }
         });
+    }
+
+    private Color parseColor(String string) {
+        try {
+            String[] parts = string.split(",");
+            if (parts.length != 3) return Color.BLACK;
+            int r = Integer.parseInt(parts[0].trim());
+            int g = Integer.parseInt(parts[1].trim());
+            int b = Integer.parseInt(parts[2].trim());
+            return new Color(r, g, b);
+        } catch (Exception e) {
+            return Color.BLACK;
+        }
     }
 
     // Save encoding history to preferences (top 10, last used at top)
@@ -286,6 +310,15 @@ public class GitDiffViewApp extends JFrame {
             sb.append(model.getElementAt(i)).append("\n");
         }
         prefs.put(PREF_KEY_ENCODING_HISTORY, sb.toString());
+    }
+    
+    private void saveDiffColors() {
+        String strAddColor = String.format("%d,%d,%d",addColor.getRed(), addColor.getGreen(), addColor.getBlue());
+        String strDelColor = String.format("%d,%d,%d",delColor.getRed(), delColor.getGreen(), delColor.getBlue());
+        String strHeadColor = String.format("%d,%d,%d",headColor.getRed(), headColor.getGreen(), headColor.getBlue());
+        prefs.put(PREF_DIFF_ADD_COLOR, strAddColor);
+        prefs.put(PREF_DIFF_DEL_COLOR, strDelColor);
+        prefs.put(PREF_DIFF_HEAD_COLOR, strHeadColor);
     }
 
     private void setWaitCursor(boolean wait) {
@@ -463,8 +496,8 @@ public class GitDiffViewApp extends JFrame {
         gbc.gridy++;
         dialog.add(new JLabel("Header Lines:"), gbc);
 
-        String[] colorNames = {"GREEN", "RED", "BLUE", "BLACK", "CYAN", "MAGENTA", "ORANGE", "PINK", "YELLOW", "GRAY"};
-        Color[] colorValues = {Color.GREEN, Color.RED, Color.BLUE, Color.BLACK, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW, Color.GRAY};
+        String[] colorNames = {"GREEN", "RED", "BLUE", "BLACK", "CYAN", "MAGENTA", "ORANGE", "PINK", "YELLOW", "GRAY", "BRIGHTGREEN"};
+        Color[] colorValues = {new Color(0,128,0), Color.RED, Color.BLUE, Color.BLACK, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.YELLOW, Color.GRAY, Color.GREEN};
         JComboBox<String> addBox = new JComboBox<>(colorNames);
         JComboBox<String> delBox = new JComboBox<>(colorNames);
         JComboBox<String> headBox = new JComboBox<>(colorNames);

@@ -6,7 +6,7 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 
 public class DiffColorTextArea extends JTextPane {
-    private Color addColor = Color.GREEN;
+    private Color addColor = new Color(0,128,0);
     private Color delColor = Color.RED;
     private Color headColor = Color.BLUE;
 
