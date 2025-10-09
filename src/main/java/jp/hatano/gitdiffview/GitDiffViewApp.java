@@ -50,7 +50,7 @@ public class GitDiffViewApp extends JFrame {
     // Button to open color scheme dialog
     private JButton colorSchemeButton;
     // Current color scheme
-    Color addColor = new Color(0,128,0);;
+    Color addColor = DiffColorTextArea.darkGreen;
     Color delColor = Color.RED;
     Color headColor = Color.BLUE;
 
@@ -241,7 +241,7 @@ public class GitDiffViewApp extends JFrame {
 
         String strAddColor = prefs.get(PREF_DIFF_ADD_COLOR, "0,128,0");
         String strDelColor = prefs.get(PREF_DIFF_DEL_COLOR, "255,0,0");
-        String strHeadColor = prefs.get(PREF_DIFF_HEAD_COLOR, "255,255,0");
+        String strHeadColor = prefs.get(PREF_DIFF_HEAD_COLOR, "0,0,255");
         addColor = DiffColorTextArea.parseColor(strAddColor);
         delColor = DiffColorTextArea.parseColor(strDelColor);
         headColor = DiffColorTextArea.parseColor(strHeadColor);
@@ -256,6 +256,7 @@ public class GitDiffViewApp extends JFrame {
             newFont = new Font("Dejavu Sans Mono",currFont.getStyle(),currFont.getSize() - 2);
         }
         diffArea.setFont(newFont);
+        System.out.println(diffArea.getFont());
         JScrollPane diffScroll = new JScrollPane(diffArea);
         add(diffScroll, BorderLayout.CENTER);
 
