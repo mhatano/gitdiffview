@@ -256,7 +256,6 @@ public class GitDiffViewApp extends JFrame {
             newFont = new Font("Dejavu Sans Mono",currFont.getStyle(),currFont.getSize() - 2);
         }
         diffArea.setFont(newFont);
-        System.out.println(diffArea.getFont());
         JScrollPane diffScroll = new JScrollPane(diffArea);
         add(diffScroll, BorderLayout.CENTER);
 
