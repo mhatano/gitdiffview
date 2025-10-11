@@ -26,18 +26,18 @@ public class DiffColorTextArea extends JTextPane {
         setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
     }
     
+    private String[] fontSelections = { "Consolas", "Menlo", "Dejavu Sans Mono" };
+
     public DiffColorTextArea(Color addColor, Color delColor, Color headColor) {
         this.addColor = addColor;
         this.delColor = delColor;
         this.headColor = headColor;
         setEditable(false);
         Font currFont = getFont();
-        Font newFont = new Font("Consolas",currFont.getStyle(),currFont.getSize() - 2);
-        if ( newFont.getFamily().equals("Dialog") ) {
-            newFont = new Font("Menlo",currFont.getStyle(),currFont.getSize() - 2);
-        }
-        if ( newFont.getFamily().equals("Dialog") ) {
-            newFont = new Font("Dejavu Sans Mono",currFont.getStyle(),currFont.getSize() - 2);
+        Font newFont = null;
+        for ( int i = 0 ; i < fontSelections.length ; i++ ) {
+            newFont = new Font(fontSelections[i],currFont.getStyle(),currFont.getSize() - 2);
+            if ( !newFont.getFamily().equals("Dialog") ) break;
         }
         setFont(newFont);
     }
