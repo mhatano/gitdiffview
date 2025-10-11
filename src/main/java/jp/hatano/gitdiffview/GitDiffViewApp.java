@@ -247,15 +247,7 @@ public class GitDiffViewApp extends JFrame {
         headColor = DiffColorTextArea.parseColor(strHeadColor);
 
         diffArea = new DiffColorTextArea(addColor, delColor, headColor);
-        Font currFont = diffArea.getFont();
-        Font newFont = new Font("Consolas",currFont.getStyle(),currFont.getSize() - 2);
-        if ( newFont.getFamily().equals("Dialog") ) {
-            newFont = new Font("Menlo",currFont.getStyle(),currFont.getSize() - 2);
-        }
-        if ( newFont.getFamily().equals("Dialog") ) {
-            newFont = new Font("Dejavu Sans Mono",currFont.getStyle(),currFont.getSize() - 2);
-        }
-        diffArea.setFont(newFont);
+
         JScrollPane diffScroll = new JScrollPane(diffArea);
         add(diffScroll, BorderLayout.CENTER);
 
