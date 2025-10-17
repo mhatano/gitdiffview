@@ -12,45 +12,33 @@ public class DiffColorTextArea extends JTextPane {
     private Color delColor = Color.RED;
     private Color headColor = Color.BLUE;
     
-    public DiffColorTextArea(final boolean color) {
-        if ( color ) {
-            addColor = Color.RED;
-            delColor = Color.BLUE;
-            headColor = Color.BLACK;
-        } else {
-            addColor = darkGreen;
-            delColor = Color.RED;
-            headColor = Color.BLUE;
-        }
-        setEditable(false);
-        setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
-    }
-    
-    private String[] fontSelections = { "Consolas", "Menlo", "Dejavu Sans Mono" };
+    private static final String[] FONT_SELECTIONS = { "Consolas", "Menlo", "Dejavu Sans Mono" };
 
-    public DiffColorTextArea(Color addColor, Color delColor, Color headColor) {
-        this.addColor = addColor;
-        this.delColor = delColor;
-        this.headColor = headColor;
+    public DiffColorTextArea() {
         setEditable(false);
         Font currFont = getFont();
         Font newFont = null;
-        for ( int i = 0 ; i < fontSelections.length ; i++ ) {
-            newFont = new Font(fontSelections[i],currFont.getStyle(),currFont.getSize() - 2);
+        for (String fontName : FONT_SELECTIONS) {
+            newFont = new Font(fontName, currFont.getStyle(), 14);
             if ( !newFont.getFamily().equals("Dialog") ) break;
         }
         setFont(newFont);
     }
+
+    public DiffColorTextArea(final boolean color) {
+        this();
+        if (color) {
+            setColors(Color.RED, Color.BLUE, Color.BLACK);
+        } else {
+            setColors(darkGreen, Color.RED, Color.BLUE);
+        }
+    }
     
-    public DiffColorTextArea(Color addColor, Color delColor, Color headColor,String fontName) {
+    public DiffColorTextArea(Color addColor, Color delColor, Color headColor) {
+        this();
         this.addColor = addColor;
         this.delColor = delColor;
         this.headColor = headColor;
-        setEditable(false);
-        Font font = getFont();
-        if( font != null ) {
-            setFont(new Font(fontName, font.getStyle(), font.getSize() - 2));
-        }
     }
     
     public void setColors(Color add, Color del, Color head) {
