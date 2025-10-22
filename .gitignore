@@ -2,3 +2,5 @@
 target/surefire-reports/jp.hatano.gitdiffview.AppTest.txt
 target/surefire-reports/TEST-jp.hatano.gitdiffview.AppTest.xml
 target/gitdiffview-1.0-SNAPSHOT.jar
+target/maven-archiver/pom.properties
+target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst
