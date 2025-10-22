@@ -74,10 +74,13 @@ public class GitDiffViewApp extends JFrame {
         java.util.List<String> repoHistory = RepoHistoryManager.loadHistory();
         repoBox = new JComboBox<>(repoHistory.toArray(new String[0]));
         repoBox.setEditable(true);
-        String lastRepo = prefs.get(PREF_KEY_LAST_REPOSITORY,repoHistory.get(0));
-        repoBox.setSelectedItem(lastRepo);
-        RepoHistoryManager.saveHistory(repoHistory,lastRepo);
+        String lastRepo = prefs.get(PREF_KEY_LAST_REPOSITORY,repoHistory.size()!=0?repoHistory.get(0):null);
         repoSelectButton = new JButton("...");
+        if ( lastRepo != null ) {
+            repoBox.setSelectedItem(lastRepo);
+            RepoHistoryManager.saveHistory(repoHistory,lastRepo);
+        }
+        repoSelectButton.setEnabled(true);
         branchBox = new JComboBox<>();
         branchBox.setPreferredSize(new Dimension(220, 26));
         loadButton = new JButton("Load Commits");
@@ -113,6 +116,11 @@ public class GitDiffViewApp extends JFrame {
             }
         });
         repoBox.addActionListener(e -> {
+            if ( repoBox.getModel().getSize() > 0 ) {
+                repoSelectButton.setEnabled(true);
+            } else {
+                repoSelectButton.setEnabled(false);
+            }
             String prev = repoPath;
             String current = repoBox.getEditor().getItem().toString().trim();
             if ( prev != null && !prev.isEmpty() && !prev.equals(current) && RepoHistoryManager.isGitRepo(prev) ) {
@@ -270,7 +278,11 @@ public class GitDiffViewApp extends JFrame {
                 prefs.putInt(PREF_KEY_WIN_Y, getY());
                 prefs.putInt(PREF_KEY_WIN_W, getWidth());
                 prefs.putInt(PREF_KEY_WIN_H, getHeight());
-                prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
+                String selectedRepo = (String)repoBox.getSelectedItem();
+                if ( selectedRepo != null ) 
+                {
+                    prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
+                }
                 encodingHistoryManager.saveEncodingHistory((DefaultComboBoxModel<String>) encodingBox.getModel());
                 diffArea.saveDiffColors(GitDiffViewApp.this);
             }
