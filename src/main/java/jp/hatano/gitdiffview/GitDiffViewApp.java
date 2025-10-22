@@ -281,7 +281,7 @@ public class GitDiffViewApp extends JFrame {
                 String selectedRepo = (String)repoBox.getSelectedItem();
                 if ( selectedRepo != null ) 
                 {
-                    prefs.put(PREF_KEY_LAST_REPOSITORY, (String)(repoBox.getSelectedItem()));
+                    prefs.put(PREF_KEY_LAST_REPOSITORY, selectedRepo);
                 }
                 encodingHistoryManager.saveEncodingHistory((DefaultComboBoxModel<String>) encodingBox.getModel());
                 diffArea.saveDiffColors(GitDiffViewApp.this);
