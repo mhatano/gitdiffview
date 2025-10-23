@@ -5,7 +5,7 @@
 
   <groupId>jp.hatano.gitdiffview</groupId>
   <artifactId>gitdiffview</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
 
   <name>gitdiffview</name>
   <!-- FIXME change it to the project's website -->
@@ -15,7 +15,7 @@
     <connection>scm:git:https://github.com/hatano/gitdiffview.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/hatano/gitdiffview.git</developerConnection>
     <url>https://github.com/hatano/gitdiffview</url>
-    <tag>HEAD</tag>
+    <tag>gitdiffview-1.1</tag>
   </scm>
 
   <distributionManagement>
