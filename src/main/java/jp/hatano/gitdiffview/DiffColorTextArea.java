@@ -69,7 +69,7 @@ public class DiffColorTextArea extends JTextPane {
                     doc.insertString(doc.getLength(), line + "\n", addStyle);
                 } else if (line.startsWith("-")) {
                     doc.insertString(doc.getLength(), line + "\n", delStyle);
-                } else if (line.startsWith("@@") || line.startsWith("diff") || line.startsWith("index") || line.startsWith("---") || line.startsWith("+++")) {
+                } else if ( startsWithAnyOf(line,"@@","diff","index","---","+++")) {
                     doc.insertString(doc.getLength(), line + "\n", headStyle);
                 } else {
                     doc.insertString(doc.getLength(), line + "\n", defaultStyle);
@@ -80,6 +80,13 @@ public class DiffColorTextArea extends JTextPane {
         }
     }
     
+    private boolean startsWithAnyOf(String line, String... prefixes) {
+        for (String prefix : prefixes) {
+            if (line.startsWith(prefix)) return true;
+        }
+        return false;
+    }
+
     @Override
     public void copy() {
         // get selected text range
@@ -99,7 +106,7 @@ public class DiffColorTextArea extends JTextPane {
                 String htmlText = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
                 Color fg = StyleConstants.getForeground(attr);
                 boolean bold = StyleConstants.isBold(attr);
-                String colorStr = fg != null ? String.format("#%02x%02x%02x", fg.getRed(), fg.getGreen(), fg.getBlue()) : null;
+                String colorStr = fg != null ? getColorString(fg) : null;
                 html.append("<span style='");
                 if (colorStr != null) html.append("color:" + colorStr + ";");
                 if (bold) html.append("font-weight:bold;");
@@ -117,14 +124,18 @@ public class DiffColorTextArea extends JTextPane {
     }
     
     void saveDiffColors(GitDiffViewApp gitDiffViewApp) {
-        String strAddColor = String.format("%d,%d,%d",gitDiffViewApp.addColor.getRed(), gitDiffViewApp.addColor.getGreen(), gitDiffViewApp.addColor.getBlue());
-        String strDelColor = String.format("%d,%d,%d",gitDiffViewApp.delColor.getRed(), gitDiffViewApp.delColor.getGreen(), gitDiffViewApp.delColor.getBlue());
-        String strHeadColor = String.format("%d,%d,%d",gitDiffViewApp.headColor.getRed(), gitDiffViewApp.headColor.getGreen(), gitDiffViewApp.headColor.getBlue());
+        String strAddColor = getColorString(gitDiffViewApp.addColor);
+        String strDelColor = getColorString(gitDiffViewApp.delColor);
+        String strHeadColor = getColorString(gitDiffViewApp.headColor);
         gitDiffViewApp.prefs.put(GitDiffViewApp.PREF_DIFF_ADD_COLOR, strAddColor);
         gitDiffViewApp.prefs.put(GitDiffViewApp.PREF_DIFF_DEL_COLOR, strDelColor);
         gitDiffViewApp.prefs.put(GitDiffViewApp.PREF_DIFF_HEAD_COLOR, strHeadColor);
     }
     
+    private String getColorString(Color color) {
+        return String.format("%d,%d,%d", color.getRed(), color.getGreen(), color.getBlue());
+    }
+
     void showColorSchemeDialog(GitDiffViewApp gitDiffViewApp) {
         JDialog dialog = new JDialog(gitDiffViewApp, "Config Diff Colors", true);
         dialog.setLayout(new GridBagLayout());
@@ -200,14 +211,31 @@ public class DiffColorTextArea extends JTextPane {
     public static Color parseColor(String string) {
         try {
             String[] parts = string.split(",");
-            if (parts.length != 3) return Color.BLACK;
-            int r = Integer.parseInt(parts[0].trim());
-            int g = Integer.parseInt(parts[1].trim());
-            int b = Integer.parseInt(parts[2].trim());
-            return new Color(r, g, b);
+            if ( parts.length != 3 ) return Color.BLACK;
+
+            int color[] = new int[parts.length];
+            for ( int i = 0; i < 3 ; i++ ) {
+                String part = parts[i].trim();
+                if ( part.startsWith("#") ) {
+                    color[i] = Integer.parseInt(part.substring(1),16);
+                } else if ( part.startsWith("0") ) {
+                    color[i] = Integer.parseInt(part,8);
+                } else {
+                    color[i] = Integer.parseInt(part);    
+                }
+            }
+            return newColor(color);
         } catch (Exception e) {
             return Color.BLACK;
         }
+    }
+
+    private static Color newColor(int[] color) {
+        return new Color(
+            Math.min(Math.max(color[0], 0), 255),
+            Math.min(Math.max(color[1], 0), 255),
+            Math.min(Math.max(color[2], 0), 255)            
+        );
     }
     
     static class HtmlSelection implements Transferable {
