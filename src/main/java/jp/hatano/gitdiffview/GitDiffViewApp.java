@@ -226,13 +226,13 @@ public class GitDiffViewApp extends JFrame {
         commitPanel.add(new JLabel("Encoding:"));
         commitPanel.add(Box.createHorizontalStrut(4));
         commitPanel.add(encodingBox);
-        commitPanel.add(Box.createHorizontalGlue());
 
         // Move Config Diff Colors button to the second row (commitPanel)
         colorSchemeButton = new JButton("Config Diff Colors");
         colorSchemeButton.addActionListener(e -> diffArea.showColorSchemeDialog(this));
         commitPanel.add(Box.createHorizontalStrut(8));
         commitPanel.add(colorSchemeButton);
+        commitPanel.add(Box.createHorizontalGlue());
 
         // Panel for both rows
         JPanel topPanel = new JPanel();
